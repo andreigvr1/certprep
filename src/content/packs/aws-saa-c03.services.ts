@@ -641,7 +641,7 @@ export const services: Service[] = [
     ],
     "watchOutFor": [
       "Not automatically multi-AZ or shared across instances by default — losing the AZ can make the volume unavailable.",
-      "Terminating an instance does not delete its EBS volumes unless 'delete on termination' is explicitly set."
+      "The root volume defaults to 'delete on termination' = true and IS deleted when the instance terminates; only additional (non-root) attached volumes default to false and survive termination unless you change the setting."
     ],
     "distinguishFrom": [
       {
@@ -668,7 +668,7 @@ export const services: Service[] = [
       },
       {
         "when": "data must survive instance termination automatically",
-        "pick": "Amazon EBS with 'delete on termination' left off - not the default assumption"
+        "pick": "Amazon EBS with 'delete on termination' explicitly turned off — the root volume defaults to true (deleted), so this must be changed deliberately"
       }
     ]
   },

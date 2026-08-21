@@ -135,8 +135,8 @@ export const comparisons: Comparison[] = [
     items: ['S3 Standard', 'Standard-IA', 'One Zone-IA', 'Glacier Instant Retrieval', 'Glacier Deep Archive'],
     rows: [
       { label: 'Access pattern', values: ['Frequent', 'Infrequent', 'Infrequent', 'Archive, instant access', 'Cold archive'] },
-      { label: 'AZs', values: ['≥3', '≥3', '1 (lower durability)', '≥3', '≥3'] },
-      { label: 'Retrieval', values: ['Immediate', 'Immediate', 'Immediate', 'Milliseconds', 'Hours (up to 12)'] },
+      { label: 'AZs', values: ['≥3', '≥3', '1 (lower availability — durability is still 11 nines)', '≥3', '≥3'] },
+      { label: 'Retrieval', values: ['Immediate', 'Immediate', 'Immediate', 'Milliseconds', 'Standard ~12h, Bulk up to 48h'] },
       { label: 'Cost profile', values: ['Highest storage', 'Lower storage + retrieval fee', 'Cheapest IA (single AZ)', 'Cheap archive, ms access', 'Cheapest storage'] },
     ],
     bottomLine: 'Unknown/changing access → Intelligent-Tiering. Recreatable infrequent data → One Zone-IA. Archives needing instant reads → Glacier Instant; deepest/cheapest → Deep Archive.',
