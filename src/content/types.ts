@@ -84,6 +84,7 @@ export const SERVICE_CATEGORIES = [
   'Analytics & Streaming',
   'Migration & Transfer',
   'Management, Monitoring & Cost',
+  'Machine Learning',
 ] as const;
 
 // A reusable architecture recipe: the problem shape that calls for it, the solution,

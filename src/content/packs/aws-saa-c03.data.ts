@@ -89,7 +89,9 @@ export const topics: Topic[] = [
       "Amazon EC2",
       "AWS Lambda",
       "AWS Organizations",
-      "IAM Access Analyzer"
+      "IAM Access Analyzer",
+      "AWS IAM Identity Center",
+      "Amazon Cognito"
     ],
     "verified": true,
     "taskId": "1.1",
@@ -252,7 +254,8 @@ export const topics: Topic[] = [
       "Amazon EBS",
       "Amazon RDS",
       "AWS Secrets Manager",
-      "AWS Systems Manager Parameter Store"
+      "AWS Systems Manager Parameter Store",
+      "AWS CloudHSM"
     ],
     "verified": true,
     "taskId": "1.3",
@@ -478,7 +481,14 @@ export const topics: Topic[] = [
       "VPC Flow Logs",
       "AWS Systems Manager Session Manager",
       "NAT Gateway",
-      "Internet Gateway"
+      "Internet Gateway",
+      "Amazon GuardDuty",
+      "Amazon Macie",
+      "Amazon Inspector",
+      "Amazon Detective",
+      "AWS Firewall Manager",
+      "AWS Artifact",
+      "AWS Security Hub"
     ],
     "verified": true,
     "taskId": "1.2",
@@ -742,7 +752,8 @@ export const topics: Topic[] = [
       "AWS Trusted Advisor",
       "Tag policies",
       "AWS Systems Manager Automation",
-      "AWS CloudTrail"
+      "AWS CloudTrail",
+      "AWS Resource Access Manager (RAM)"
     ],
     "verified": true,
     "taskId": "1.1",
@@ -856,7 +867,9 @@ export const topics: Topic[] = [
       "Application Load Balancer (ALB)",
       "AWS Lambda",
       "AWS Fargate",
-      "Amazon ECS"
+      "Amazon ECS",
+      "Amazon MQ",
+      "AWS Step Functions"
     ],
     "verified": true,
     "taskId": "2.1",
@@ -1272,7 +1285,10 @@ export const topics: Topic[] = [
       "Amazon Aurora Global Database",
       "Amazon DynamoDB",
       "DynamoDB global tables",
-      "DynamoDB point-in-time recovery (PITR)"
+      "DynamoDB point-in-time recovery (PITR)",
+      "Amazon RDS Proxy",
+      "Amazon Keyspaces (for Apache Cassandra)",
+      "Amazon QLDB (Quantum Ledger Database)"
     ],
     "verified": true,
     "taskId": "2.2",
@@ -1376,7 +1392,8 @@ export const topics: Topic[] = [
       "Amazon SNS",
       "Amazon DynamoDB",
       "AWS Fargate",
-      "Amazon S3"
+      "Amazon S3",
+      "Amazon RDS Proxy"
     ],
     "verified": true,
     "taskId": "2.1",
@@ -1454,7 +1471,8 @@ export const topics: Topic[] = [
       "AWS CloudTrail",
       "AWS X-Ray",
       "Amazon EventBridge",
-      "AWS Health"
+      "AWS Health",
+      "AWS Config"
     ],
     "verified": true,
     "taskId": "2.2",
@@ -1647,7 +1665,8 @@ export const topics: Topic[] = [
       "Amazon SQS",
       "Amazon SNS",
       "AWS Batch",
-      "Amazon EMR"
+      "Amazon EMR",
+      "AWS Elastic Beanstalk"
     ],
     "verified": true,
     "taskId": "3.2",
@@ -2307,7 +2326,8 @@ export const topics: Topic[] = [
       "Amazon EMR",
       "Amazon Redshift",
       "Amazon QuickSight",
-      "AWS Lake Formation"
+      "AWS Lake Formation",
+      "Amazon AppFlow"
     ],
     "verified": true,
     "taskId": "3.5",
@@ -2533,7 +2553,7 @@ export const topics: Topic[] = [
     "domainId": "d3",
     "name": "Migration & data transfer",
     "summary": "Moving data and workloads to AWS with the right tool — Snow Family for offline bulk transfer, DataSync for online file transfer, DMS for live database migration, and Transfer Family/Storage Gateway for ongoing hybrid access.",
-    "learn": "**The migration decision tree.** SAA-C03 rewards matching the transfer method to bandwidth, data size, and whether the flow is one-time or ongoing. Offline vs online is the first fork; file/object vs database vs whole-server is the second.\n\n**AWS Snow Family (Snowball Edge).** A physical device you ship to move petabyte-scale data *offline* when the network is too slow or costly. Data is encrypted at rest and in transit, with keys managed in AWS KMS; devices have high-speed ports (10/25/40/100 Gbps). Rule of thumb: if an online copy would take weeks or months, ship a Snowball. **Trap:** before importing to Amazon S3, every file must satisfy S3 object key naming guidelines — a colon (`:`) or other unsupported character in a filename causes that object to fail the import.\n\n**AWS DataSync.** *Online*, accelerated, agent-based transfer between on-prem (NFS/SMB/HDFS/object) and AWS storage (S3/EFS/FSx). Bidirectional, one-time or scheduled, with built-in TLS encryption and integrity validation. The default pick for ongoing hybrid sync and large online migrations over an adequate link.\n\n**AWS DMS + SCT.** DMS migrates databases while the source **stays online**, using change data capture (CDC) to replicate ongoing changes until a brief cutover. Homogeneous (MySQL→MySQL) needs only DMS. Heterogeneous (Oracle→Aurora PostgreSQL) needs the **Schema Conversion Tool (SCT)** to convert schema and procedural code first, then DMS moves the data.\n\n**AWS Transfer Family.** Fully managed SFTP/FTPS/FTP endpoints that land files directly in S3 or EFS — expose a managed protocol server to external partners without running your own.\n\n**AWS Storage Gateway.** Hybrid storage giving on-prem apps low-latency local access backed by S3 (File Gateway), plus Volume and Tape (VTL/WORM) gateways for backup. It is for ongoing hybrid access, not a bulk one-time migration.\n\n**AWS Application Migration Service (MGN).** Lift-and-shift (rehost) of entire servers to EC2 via continuous block-level replication, then a fast cutover — the successor to CloudEndure Migration.\n\n**Confusable:** DataSync (bulk file/object transfer) vs Transfer Family (managed SFTP endpoint) vs Storage Gateway (persistent hybrid access). Snowball = offline; DataSync = online.",
+    "learn": "**The migration decision tree.** SAA-C03 rewards matching the transfer method to bandwidth, data size, and whether the flow is one-time or ongoing. Offline vs online is the first fork; file/object vs database vs whole-server is the second.\n\n**AWS Snow Family (Snowball Edge).** A physical device you ship to move petabyte-scale data *offline* when the network is too slow or costly. Data is encrypted at rest and in transit, with keys managed in AWS KMS; devices have high-speed ports (10/25/40/100 Gbps). Rule of thumb: if an online copy would take weeks or months, ship a Snowball. **Trap:** S3 itself allows a colon (`:`) in an object key — the documented failure is on the EXPORT side, when objects move from S3 onto a Windows workstation, since Windows disallows `:` in filenames.\n\n**AWS DataSync.** *Online*, accelerated, agent-based transfer between on-prem (NFS/SMB/HDFS/object) and AWS storage (S3/EFS/FSx). Bidirectional, one-time or scheduled, with built-in TLS encryption and integrity validation. The default pick for ongoing hybrid sync and large online migrations over an adequate link.\n\n**AWS DMS + SCT.** DMS migrates databases while the source **stays online**, using change data capture (CDC) to replicate ongoing changes until a brief cutover. Homogeneous (MySQL→MySQL) needs only DMS. Heterogeneous (Oracle→Aurora PostgreSQL) needs the **Schema Conversion Tool (SCT)** to convert schema and procedural code first, then DMS moves the data.\n\n**AWS Transfer Family.** Fully managed SFTP/FTPS/FTP endpoints that land files directly in S3 or EFS — expose a managed protocol server to external partners without running your own.\n\n**AWS Storage Gateway.** Hybrid storage giving on-prem apps low-latency local access backed by S3 (File Gateway), plus Volume and Tape (VTL/WORM) gateways for backup. It is for ongoing hybrid access, not a bulk one-time migration.\n\n**AWS Application Migration Service (MGN).** Lift-and-shift (rehost) of entire servers to EC2 via continuous block-level replication, then a fast cutover — the successor to CloudEndure Migration.\n\n**Confusable:** DataSync (bulk file/object transfer) vs Transfer Family (managed SFTP endpoint) vs Storage Gateway (persistent hybrid access). Snowball = offline; DataSync = online.",
     "keyPoints": [
       "Snowball Edge = offline, PB-scale transfer for when the network is too slow or costly; data is encrypted at rest and in transit.",
       "Snowball Edge exposes high-speed network ports of 10/25/40/100 Gbps (RJ45, SFP28, and QSFP interfaces).",
@@ -2553,6 +2573,7 @@ export const topics: Topic[] = [
       "Unlike S3 Cross-Region Replication, which replicates only objects written AFTER replication is enabled (existing objects require S3 Batch Replication), a DataSync task copies existing data and can be re-run on a schedule to move only what changed, with per-file integrity verification.",
       "A DataSync task has a bandwidth limit setting (BytesPerSecond) that throttles the transfer so it does not saturate a shared network link, plus include and exclude filters that scope the transfer by path pattern.",
       "The DataSync task option 'Keep deleted files' controls whether files removed from the source are also deleted in the destination, so a true mirror requires turning that option off; DataSync can also be deployed with VPC interface endpoints (AWS PrivateLink) so transfer traffic stays off the public internet.",
+      "The 7 Rs frame a migration strategy, one word each: Rehost (lift-and-shift, no changes, via MGN), Replatform (lift-and-tinker, e.g. self-managed MySQL to RDS), Repurchase (drop it, buy SaaS instead), Refactor (re-architect for cloud, e.g. monolith to serverless), Relocate (move a whole VMware environment via VMware Cloud on AWS), Retain (leave it on-prem for now), and Retire (turn it off, nobody used it).",
       "AWS Snowball Edge Storage Optimized provides roughly 80 TB of usable storage per device and is the default choice for bulk data transfer; a larger 210 TB variant also exists.",
       "AWS Snowball Edge Compute Optimized trades capacity for compute - around 28 TB of usable NVMe storage plus 104 vCPUs and 416 GB of memory, with an optional GPU on the GPU-equipped variant - and is chosen when data must be processed, filtered, or scored by a model at the edge before or instead of shipping it.",
       "AWS Snowcone is the smallest, most portable device (about 8 TB HDD or 14 TB SSD usable, roughly 4.5 lbs / 2.1 kg) for space-constrained or ruggedized edge locations such as vehicles and drones; it also ships with AWS DataSync preinstalled for online transfer.",
@@ -2835,7 +2856,8 @@ export const topics: Topic[] = [
       "AWS Fargate",
       "Fargate Spot",
       "AWS Compute Optimizer",
-      "AWS Cost Explorer"
+      "AWS Cost Explorer",
+      "AWS Elastic Beanstalk"
     ],
     "verified": true,
     "taskId": "4.2",
@@ -3140,7 +3162,9 @@ export const topics: Topic[] = [
       "Amazon CloudFront",
       "AWS Direct Connect",
       "AWS Site-to-Site VPN",
-      "AWS Cost Explorer"
+      "AWS Cost Explorer",
+      "AWS Global Accelerator",
+      "AWS Client VPN"
     ],
     "verified": true,
     "taskId": "4.4",
@@ -3268,7 +3292,10 @@ export const topics: Topic[] = [
       "Cost Allocation Tags",
       "AWS Organizations (Consolidated Billing)",
       "AWS Trusted Advisor",
-      "AWS Compute Optimizer"
+      "AWS Compute Optimizer",
+      "AWS Cost Anomaly Detection",
+      "AWS Billing Conductor",
+      "AWS Service Catalog"
     ],
     "verified": true,
     "taskId": "4.x",

@@ -17,7 +17,8 @@ export const services: Service[] = [
       "On-Demand pricing is per-second (Linux/Windows) with no upfront commitment.",
       "Root volume can be EBS-backed (persistent) or instance-store-backed depending on AMI.",
       "Security Groups are stateful and attach at the instance/ENI level, evaluated alongside subnet NACLs.",
-      "User data scripts run once on first boot unless explicitly configured to run on every boot."
+      "User data scripts run once on first boot unless explicitly configured to run on every boot.",
+      "An Elastic Network Interface (ENI) is a detachable virtual network card carrying a private IP, MAC address, and security groups; it can be moved between instances in the same AZ for failover. An Elastic IP (EIP) is a static, user-owned public IPv4 address that stays fixed when remapped across instances/AZs, unlike an instance's default public IP which changes on stop/start."
     ],
     "bestFor": [
       "Workloads needing full OS-level control, custom software, or specific licensing",
@@ -541,7 +542,9 @@ export const services: Service[] = [
       "Lifecycle rules automatically transition or expire objects between storage classes (see storage class comparison) on a schedule.",
       "Object Lock enforces WORM (write-once-read-many) retention via governance or compliance mode, often for regulatory holds.",
       "Block Public Access is an account/bucket-level setting that overrides ACLs and policies to prevent accidental public exposure.",
-      "Billed per GB-month stored plus per-request and data-transfer-out charges, not a fixed capacity price."
+      "Billed per GB-month stored plus per-request and data-transfer-out charges, not a fixed capacity price.",
+      "S3 Transfer Acceleration routes uploads through the nearest CloudFront edge location and the AWS backbone instead of the public internet; it only helps when the bottleneck is distance/path quality (e.g. uploads from another continent) and AWS only bills for it when it's actually faster than a standard upload.",
+      "S3 Batch Operations runs one action (copy, tag, or restore — including a copy-over-itself to apply new encryption) across billions of EXISTING objects in one job — the fix whenever a scenario needs to apply something to objects already in the bucket, since default settings like default encryption only ever apply to new uploads."
     ],
     "bestFor": [
       "Durable, highly available storage for static assets, backups, data lakes, or application files accessed over HTTP(S).",
@@ -574,6 +577,14 @@ export const services: Service[] = [
       {
         "when": "workload needs virtually unlimited scale without pre-provisioning capacity",
         "pick": "Amazon S3"
+      },
+      {
+        "when": "uploads from users far from the bucket's Region are slow over the public internet",
+        "pick": "S3 Transfer Acceleration"
+      },
+      {
+        "when": "need to apply an action (copy/tag/restore/encrypt) to objects already sitting in the bucket, not just new uploads",
+        "pick": "S3 Batch Operations"
       }
     ]
   },
@@ -633,7 +644,8 @@ export const services: Service[] = [
       "Volume types split into SSD-backed (gp3, io2 — transactional/IOPS-heavy workloads) and HDD-backed (st1, sc1 — throughput-heavy workloads); see gp3 vs io2 comparison for tradeoffs.",
       "Multi-Attach lets io1/io2 volumes attach to multiple instances simultaneously, but only within the same AZ, and requires a cluster-aware filesystem.",
       "EBS Snapshots are incremental, point-in-time backups stored in S3 (not directly browsable) and can be copied across Regions or accounts.",
-      "Billed per GB-month provisioned (plus IOPS/throughput for some types), regardless of how much data is actually used."
+      "Billed per GB-month provisioned (plus IOPS/throughput for some types), regardless of how much data is actually used.",
+      "The Recycle Bin retains deleted EBS snapshots for a rule-defined period before permanent deletion, so an accidentally deleted snapshot can be recovered instead of being gone immediately."
     ],
     "bestFor": [
       "Boot volumes and low-latency block storage for a single EC2 instance, such as databases or transactional workloads.",
@@ -1011,7 +1023,8 @@ export const services: Service[] = [
       "Lift-and-shift migration of existing on-prem relational databases to AWS."
     ],
     "watchOutFor": [
-      "Vertical scaling has ceilings; very high-throughput workloads may need Aurora or a purpose-built NoSQL service instead."
+      "Vertical scaling has ceilings; very high-throughput workloads may need Aurora or a purpose-built NoSQL service instead.",
+      "No OS-level access on standard RDS — you cannot SSH in, install custom OS agents, or tweak engine binaries. A scenario needing custom engine configuration or OS access is asking for RDS Custom (Oracle/SQL Server only) or a database on EC2, not plain RDS."
     ],
     "distinguishFrom": [
       {
@@ -1022,6 +1035,10 @@ export const services: Service[] = [
         "service": "RDS Multi-AZ vs Read Replica",
         "comparisonId": "cmp-multiaz-readreplica",
         "note": "See the dedicated comparison card for the failover-availability vs read-scaling tradeoff."
+      },
+      {
+        "service": "RDS Custom",
+        "note": "RDS Custom (Oracle and SQL Server only) is the halfway house between RDS and self-managed EC2: it grants OS- and database-level access for custom configurations while still automating some management tasks. Pick it only when a scenario explicitly needs OS/engine access that plain RDS doesn't allow."
       }
     ],
     "triggers": [
@@ -1089,12 +1106,15 @@ export const services: Service[] = [
       "Up to 15 Aurora Replicas share the same underlying storage, so replica lag is typically much lower than standard RDS read replicas.",
       "Aurora Global Database replicates a primary cluster to secondary Regions with typically sub-second lag, for DR or low-latency global reads.",
       "Aurora Serverless v2 scales compute capacity up and down in fine-grained increments automatically, billed per capacity unit consumed.",
-      "Billed for compute instance hours (or capacity units for Serverless v2), storage consumed, and I/O operations."
+      "Billed for compute instance hours (or capacity units for Serverless v2), storage consumed, and I/O operations.",
+      "Aurora Cloning creates a full-size, copy-on-write clone of a cluster in minutes without duplicating the underlying storage — cheap until the clone's data actually diverges from the source.",
+      "Aurora Backtrack (MySQL-compatible only) rewinds a cluster to an earlier point in time IN PLACE, undoing an accidental delete or bad migration fast, without a full restore-from-backup or a new instance."
     ],
     "bestFor": [
       "MySQL/PostgreSQL-compatible workloads needing higher throughput, availability, or replica performance than standard RDS.",
       "Global applications needing cross-Region disaster recovery or low-latency reads via Aurora Global Database.",
-      "Unpredictable or spiky workloads where paying for idle fixed capacity is wasteful, via Aurora Serverless v2."
+      "Unpredictable or spiky workloads where paying for idle fixed capacity is wasteful, via Aurora Serverless v2.",
+      "Fast, low-cost staging/test copies of production data (Cloning) or fast in-place recovery from a bad write (Backtrack)."
     ],
     "watchOutFor": [
       "Costs more per hour than equivalent RDS instances; not automatically cheaper for small or steady workloads."
@@ -1117,6 +1137,14 @@ export const services: Service[] = [
       {
         "when": "Unpredictable or spiky relational workload where paying for idle fixed capacity is wasteful",
         "pick": "Amazon Aurora (Serverless v2)"
+      },
+      {
+        "when": "Need a full-size copy of production data for testing quickly and cheaply, without impacting production",
+        "pick": "Amazon Aurora (Cloning)"
+      },
+      {
+        "when": "Undo an accidental delete or bad migration fast, without restoring from backup or launching a new instance",
+        "pick": "Amazon Aurora (Backtrack)"
       }
     ]
   },
@@ -1984,7 +2012,8 @@ export const services: Service[] = [
       "Latency-based routing sends users to the Region with the lowest measured latency; it only helps once resources exist in 2+ Regions.",
       "Failover routing pairs a primary and secondary record with health checks for active/passive disaster recovery.",
       "Geolocation routes by the user's geographic location (compliance/content restriction); geoproximity biases traffic by distance and requires Traffic Flow; multivalue answer returns up to 8 healthy, health-checked records per query — not a load balancer replacement.",
-      "Alias records point a zone apex to AWS resources (ALB, CloudFront, S3) with no extra query charge; Route 53 Resolver provides hybrid DNS between a VPC and on-premises via inbound/outbound endpoints."
+      "Alias records point a zone apex to AWS resources (ALB, CloudFront, S3) with no extra query charge; Route 53 Resolver provides hybrid DNS between a VPC and on-premises via inbound/outbound endpoints.",
+      "Resolver direction is named from the VPC's point of view: an INBOUND endpoint lets on-premises resolvers send queries INTO the VPC to resolve AWS private names; an OUTBOUND endpoint lets the VPC send queries OUT to resolve on-premises/corporate DNS names."
     ],
     "bestFor": [
       "Authoritative DNS for public or private domains with health-check-driven failover.",
@@ -4117,6 +4146,1326 @@ export const services: Service[] = [
       {
         "when": "want a spend-based discount without reserving specific capacity",
         "pick": "Savings Plans"
+      }
+    ]
+  }
+,
+  {
+    "id": "elastic-beanstalk",
+    "name": "AWS Elastic Beanstalk",
+    "category": "Compute",
+    "oneLiner": "A PaaS that provisions and manages EC2, Auto Scaling, a load balancer, and monitoring for your uploaded application code, while still giving you access to the underlying resources.",
+    "specifics": [
+      "You upload code/config; Beanstalk provisions EC2, an Auto Scaling group, an ELB, CloudWatch alarms, and S3 for versions — you keep full access to tweak these resources directly.",
+      "Deployment policies trade off downtime, extra capacity, and cost: All at once (fastest, full downtime), Rolling (updates in batches, reduced capacity, no extra cost), Rolling with additional batch (launches a new batch first, no capacity loss, small extra cost), Immutable (parallel new ASG, safest rollback, highest cost/time), Blue/Green (entirely new environment, manual CNAME swap, zero downtime).",
+      "Supports both web server environments (handle requests directly) and worker environments (process jobs pulled from an SQS queue).",
+      "Elastic Beanstalk itself is free — you only pay for the underlying EC2, ELB, and other resources it creates.",
+      "Customizable via .ebextensions configuration files and saved configurations for repeatable environment setup."
+    ],
+    "bestFor": [
+      "Deploying a web app quickly without manually configuring EC2, Auto Scaling, and a load balancer.",
+      "Teams that want standard deployment automation (rolling/immutable/blue-green) without building custom CI/CD infrastructure, while still needing occasional direct access to the resources."
+    ],
+    "watchOutFor": [
+      "Not a container orchestrator — for microservices needing fine-grained container scheduling across many services, ECS/EKS fits better.",
+      "Less precise, version-controlled infrastructure definition than CloudFormation, which Beanstalk uses under the hood."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS CloudFormation",
+        "note": "Beanstalk is an opinionated, application-centric PaaS with built-in deployment policies; CloudFormation is general-purpose declarative IaC with no deployment-policy abstraction (and Beanstalk actually uses CloudFormation internally)."
+      },
+      {
+        "service": "Amazon ECS",
+        "note": "Beanstalk deploys code onto managed EC2/ASG environments (or single containers); it isn't a full container orchestration platform for scheduling many interdependent services."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to deploy a web app quickly without manually setting up EC2, Auto Scaling, and a load balancer",
+        "pick": "AWS Elastic Beanstalk"
+      },
+      {
+        "when": "question tests downtime vs. cost tradeoffs across deployment methods (rolling vs. immutable vs. blue/green)",
+        "pick": "AWS Elastic Beanstalk"
+      }
+    ]
+  },
+  {
+    "id": "lambda-at-edge",
+    "name": "AWS Lambda@Edge",
+    "category": "Networking",
+    "oneLiner": "Lambda functions written in Node.js or Python that run at CloudFront edge locations to customize content and can call out to other services.",
+    "specifics": [
+      "Runs at all 4 CloudFront trigger points: viewer request, viewer response, origin request, origin response.",
+      "Can make outbound network calls (e.g., to an API or database) and has higher CPU, memory, and timeout limits than CloudFront Functions.",
+      "Functions are authored and deployed from the us-east-1 Region, then CloudFront automatically replicates them to edge locations worldwide.",
+      "Viewer-triggered functions have tighter size/timeout limits than origin-triggered functions, which allow larger and longer-running code.",
+      "Billed per request and per unit of compute duration — meaningfully more expensive than CloudFront Functions."
+    ],
+    "bestFor": [
+      "Edge logic that needs to call an external API, database, or auth service (e.g., validating a token against a backend).",
+      "Modifying origin requests or responses, such as adding headers before the origin sees a request, or on-the-fly image resizing."
+    ],
+    "watchOutFor": [
+      "Higher latency, cold-start time, and cost than CloudFront Functions — overkill for simple viewer-side header or URL rewrites."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon CloudFront Functions",
+        "note": "Lambda@Edge covers all 4 trigger points and supports network calls with higher resource limits; CloudFront Functions is viewer-request/response only, JavaScript-only, no network calls, but sub-millisecond and far cheaper — pick CloudFront Functions for simple, high-volume viewer manipulation."
+      },
+      {
+        "service": "AWS Lambda",
+        "note": "Standard Lambda runs in a single Region you choose and isn't tied to CloudFront events; Lambda@Edge is deployed from us-east-1 but executes at edge locations globally, triggered by CloudFront request/response events."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to call an external API/database or modify origin request/response at the CloudFront edge",
+        "pick": "AWS Lambda@Edge"
+      },
+      {
+        "when": "scenario needs edge logic in Node.js/Python beyond simple JavaScript header/URL tweaks",
+        "pick": "AWS Lambda@Edge"
+      }
+    ]
+  },
+  {
+    "id": "cloudfront-functions",
+    "name": "Amazon CloudFront Functions",
+    "category": "Networking",
+    "oneLiner": "Lightweight, JavaScript-only functions that run in sub-millisecond time directly on CloudFront edge locations for simple, high-volume request/response manipulation.",
+    "specifics": [
+      "Only supports viewer request and viewer response trigger points — no origin request/response.",
+      "Cannot make outbound network calls or access a file system; execution is pure, in-memory JavaScript.",
+      "Executes in under a millisecond and scales to millions of requests per second, at much lower cost than Lambda@Edge.",
+      "Runs on a restricted CloudFront JavaScript engine (a subset of ECMAScript), not full Node.js.",
+      "Typical uses: header manipulation, URL rewrites/redirects, cache-key normalization, and simple token-based access checks."
+    ],
+    "bestFor": [
+      "High-volume, simple viewer-side transformations like header injection, URL rewrites, or redirects.",
+      "Cost- and latency-sensitive edge logic where microseconds and per-request cost matter most."
+    ],
+    "watchOutFor": [
+      "Cannot call external APIs/services or act on origin request/response — that requires Lambda@Edge instead."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Lambda@Edge",
+        "note": "CloudFront Functions is cheaper, faster, and simpler but limited to viewer triggers with no network calls; use Lambda@Edge when origin-side logic or outbound calls are needed."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need simple, high-scale header/URL manipulation at the CloudFront edge with lowest latency and cost",
+        "pick": "Amazon CloudFront Functions"
+      }
+    ]
+  },
+  {
+    "id": "workspaces",
+    "name": "Amazon WorkSpaces",
+    "category": "Compute",
+    "oneLiner": "A fully managed, persistent virtual desktop (VDI) service that provisions cloud-based Windows or Linux desktops for end users.",
+    "specifics": [
+      "Requires a directory for user authentication: AWS Managed Microsoft AD, Simple AD, or AD Connector (which links to an on-premises Active Directory).",
+      "Billed either hourly (pay per hour used plus a fixed monthly base fee) or monthly (fixed fee for unlimited usage) — choice depends on usage pattern.",
+      "Desktops come as preconfigured bundles (e.g., Value, Standard, Performance, Power, Graphics) running Windows or Amazon Linux.",
+      "User data and installed applications persist on the WorkSpace's volumes even when stopped; hourly WorkSpaces can auto-stop when idle to save cost.",
+      "Accessed via WorkSpaces client apps or a browser (WorkSpaces Web) from PCs, Macs, thin clients, and tablets."
+    ],
+    "bestFor": [
+      "Providing secure, persistent virtual desktops for remote or distributed employees without managing physical hardware.",
+      "Replacing an on-premises VDI deployment while integrating with existing Active Directory."
+    ],
+    "watchOutFor": [
+      "Not designed for streaming individual applications to many casual/external users — that's Amazon AppStream 2.0."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon AppStream 2.0",
+        "note": "WorkSpaces gives each user a persistent, dedicated full desktop; AppStream 2.0 streams individual applications on-demand from non-persistent instances, better suited for delivering specific apps to many or external users."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need persistent virtual desktops for employees, integrated with Active Directory",
+        "pick": "Amazon WorkSpaces"
+      }
+    ]
+  },
+  {
+    "id": "cloudformation",
+    "name": "AWS CloudFormation",
+    "category": "Management, Monitoring & Cost",
+    "oneLiner": "Infrastructure-as-code service that provisions and manages AWS resources as \"stacks\" defined in YAML/JSON templates.",
+    "specifics": [
+      "Change sets preview exactly what will be added, modified, or replaced before you execute an update, avoiding surprise resource replacement or downtime.",
+      "StackSets deploy and manage the same template consistently across multiple AWS accounts and Regions from one administrator account.",
+      "Drift detection identifies resources that were manually changed outside of CloudFormation, so the live resource no longer matches the template.",
+      "DeletionPolicy and UpdateReplacePolicy attributes control whether a resource (e.g., an RDS instance or S3 bucket) is retained, snapshotted, or deleted when the stack is deleted or the resource is replaced.",
+      "Nested stacks let you break large templates into reusable, composable components referenced from a parent stack."
+    ],
+    "bestFor": [
+      "Repeatable, version-controlled provisioning of AWS infrastructure that needs to be consistent across environments or accounts.",
+      "Safely previewing and rolling back infrastructure changes via stacks and change sets."
+    ],
+    "watchOutFor": [
+      "Stack deletion is irreversible unless DeletionPolicy is set to Retain or Snapshot on critical resources beforehand."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS CDK",
+        "note": "CloudFormation is the declarative template engine itself; CDK is a code-first layer that synthesizes down to CloudFormation templates and does not replace it."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to provision AWS infrastructure declaratively and repeatably, or roll it out identically across many accounts/Regions",
+        "pick": "AWS CloudFormation"
+      }
+    ]
+  },
+  {
+    "id": "cdk",
+    "name": "AWS Cloud Development Kit (CDK)",
+    "category": "Management, Monitoring & Cost",
+    "oneLiner": "Open-source framework for defining AWS infrastructure using familiar programming languages instead of YAML/JSON templates.",
+    "specifics": [
+      "CDK code is synthesized (\"cdk synth\") into a standard CloudFormation template and then deployed through CloudFormation — CDK is a layer on top of CloudFormation, not a replacement for it.",
+      "Constructs are reusable, versioned cloud components (L1 low-level CFN resources, L2 curated with sane defaults, L3 opinionated patterns) that can be shared and published like software libraries.",
+      "Because it's real code (TypeScript, Python, Java, C#, Go), CDK supports loops, conditionals, functions, and unit testing when defining infrastructure, unlike static templates.",
+      "\"cdk diff\" shows what will change in the resulting CloudFormation stack before deployment."
+    ],
+    "bestFor": [
+      "Teams that want to define infrastructure using programming-language logic, abstraction, and reuse rather than hand-writing templates.",
+      "Building and sharing standardized, opinionated infrastructure patterns (constructs) across an organization."
+    ],
+    "watchOutFor": [
+      "Still deploys via CloudFormation stacks underneath, so CloudFormation limits and change-set behavior still apply."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS CloudFormation",
+        "note": "CDK generates CloudFormation templates from code; if the exam scenario describes writing raw templates directly, that's CloudFormation, not CDK."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "team wants to define infrastructure using a general-purpose programming language with reusable abstractions",
+        "pick": "AWS CDK"
+      }
+    ]
+  },
+  {
+    "id": "well-architected-tool",
+    "name": "AWS Well-Architected Tool",
+    "category": "Management, Monitoring & Cost",
+    "oneLiner": "Free console tool that reviews a workload against the six Well-Architected Framework pillars and produces a prioritized list of risks and improvement recommendations.",
+    "specifics": [
+      "Works by answering a structured questionnaire per pillar: Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, and Sustainability.",
+      "Flags items as high or medium risk and links each to specific improvement guidance, but does not automatically remediate anything itself.",
+      "Supports saving \"Milestones\" to track a workload's architecture and risk posture over time as it evolves.",
+      "Lenses let you apply additional workload-specific question sets (e.g., SaaS Lens, Serverless Lens) on top of the core framework."
+    ],
+    "bestFor": [
+      "Structured, ongoing self-assessment of an existing or planned workload's architecture against AWS best practices.",
+      "Producing a documented, prioritized backlog of architectural risks for a workload review."
+    ],
+    "watchOutFor": [
+      "It is an assessment/reporting tool only — it identifies risks but does not implement fixes or change your environment."
+    ],
+    "triggers": [
+      {
+        "when": "need to formally evaluate a workload against AWS best practices across pillars like security, reliability, and cost",
+        "pick": "AWS Well-Architected Tool"
+      }
+    ]
+  },
+  {
+    "id": "resource-access-manager",
+    "name": "AWS Resource Access Manager (RAM)",
+    "category": "Management, Monitoring & Cost",
+    "oneLiner": "Lets you securely share AWS resources you own with other AWS accounts or across an AWS Organization without duplicating the resource.",
+    "specifics": [
+      "Common shareable resources include VPC subnets, Transit Gateways, License Manager configurations, Route 53 Resolver rules, and Aurora DB clusters — RDS/Aurora snapshot sharing across accounts is a separate, native RDS feature, not something done through RAM.",
+      "Shared resources appear and behave in the consuming account as if they were local, but ownership (and billing for the resource itself) stays with the sharing account.",
+      "Within an AWS Organization, sharing can be enabled without each recipient manually accepting an invitation; outside an Organization, the recipient account must accept a resource share invitation.",
+      "Grants access via its own native resource-sharing mechanism, not through cross-account IAM roles or resource-based policies."
+    ],
+    "bestFor": [
+      "Centralizing shared infrastructure like a VPC subnet or Transit Gateway so multiple accounts can use it without duplicating or peering resources.",
+      "Reducing operational overhead of managing per-account copies of common resources like License Manager configurations."
+    ],
+    "watchOutFor": [
+      "RAM shares the resource itself, not permissions on an existing resource — don't confuse it with S3 bucket policies or KMS key policies used for cross-account access."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Organizations",
+        "note": "Organizations manages account structure, consolidated billing, and SCPs; RAM shares actual resources between those accounts."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to share a subnet, Transit Gateway, or similar resource across multiple accounts without duplicating it",
+        "pick": "AWS Resource Access Manager (RAM)"
+      }
+    ]
+  },
+  {
+    "id": "cost-anomaly-detection",
+    "name": "AWS Cost Anomaly Detection",
+    "category": "Management, Monitoring & Cost",
+    "oneLiner": "Uses machine learning to learn your normal AWS spending pattern and automatically alerts you when spend deviates unexpectedly, with no manual threshold to set.",
+    "specifics": [
+      "ML-based: it learns a baseline per service, linked account, or Cost Category and flags statistically unusual spend, unlike a fixed dollar/percentage limit.",
+      "You define a 'monitor' (by AWS service, account, or Cost Category) and an 'alert subscription' with a dollar-impact threshold for notifications, not for detection itself.",
+      "Alerts are delivered via SNS or email and include a root-cause breakdown (which service/account/region drove the anomaly).",
+      "Free to use — no additional cost beyond what you'd already pay for Cost Explorer data.",
+      "A new monitor starts its first evaluation within about 24 hours, but a reliable spending baseline needs roughly 10 days of historical usage data, with accuracy still improving over the following weeks."
+    ],
+    "bestFor": [
+      "Catching unexpected cost spikes (e.g., a misconfigured resource or runaway usage) without having to guess a fixed budget threshold in advance."
+    ],
+    "watchOutFor": [
+      "It does not enforce limits or stop spending — it only detects and notifies; it's not a substitute for Budgets or preventive controls."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Budgets",
+        "note": "Budgets alerts when spend/usage crosses a threshold YOU manually set; Cost Anomaly Detection uses ML to detect deviations from a learned normal pattern with no threshold to configure."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need automatic alerting on unusual/unexpected spend without defining a manual dollar threshold",
+        "pick": "AWS Cost Anomaly Detection"
+      },
+      {
+        "when": "need alerting when spend exceeds a specific, known dollar or percentage limit you define",
+        "pick": "AWS Budgets"
+      }
+    ]
+  },
+  {
+    "id": "billing-conductor",
+    "name": "AWS Billing Conductor",
+    "category": "Management, Monitoring & Cost",
+    "oneLiner": "Lets the management account of a consolidated billing family build custom, internal 'pro forma' invoices for chargeback or showback to business units, without changing what AWS actually bills.",
+    "specifics": [
+      "Groups linked accounts into 'billing groups' and applies custom pricing rules (markups, discounts, custom rates) to produce internal pro forma invoices.",
+      "Purely a re-presentation layer for internal cost allocation/chargeback — it never changes the actual amount AWS charges the payer account.",
+      "Used for scenarios like reselling AWS services or allocating shared costs across departments with custom, negotiated internal rates.",
+      "Only usable by the management (payer) account of an AWS Organization using consolidated billing."
+    ],
+    "bestFor": [
+      "Internal chargeback/showback to business units or customers using custom pricing that differs from AWS's actual rates.",
+      "AWS resellers who need to bill end customers at custom markups while paying AWS at standard rates."
+    ],
+    "watchOutFor": [
+      "Does not affect actual AWS billing or payment — only the internal, custom-formatted view of costs."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Organizations consolidated billing",
+        "note": "Consolidated billing aggregates real AWS charges across linked accounts for a single actual payment; Billing Conductor layers custom internal pricing on top for chargeback purposes only."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to show business units or resale customers a custom-priced internal invoice distinct from actual AWS charges",
+        "pick": "AWS Billing Conductor"
+      }
+    ]
+  },
+  {
+    "id": "data-lifecycle-manager",
+    "name": "Amazon Data Lifecycle Manager (DLM)",
+    "category": "Storage",
+    "oneLiner": "Automates the scheduled creation, retention, and deletion of EBS snapshots and EBS-backed AMIs based on tags you define.",
+    "specifics": [
+      "Policies target resources by tag (e.g., Environment=Production) and define a schedule (e.g., daily/weekly) plus a retention count or age for how many snapshots/AMIs to keep before auto-deleting older ones.",
+      "Supports snapshot policies (individual EBS volumes), EBS-backed AMI policies, and cross-region/cross-account snapshot copy for disaster recovery.",
+      "Free to use — you only pay for the underlying snapshot/AMI storage it creates.",
+      "It is the 'set it and forget it' automation answer versus manually scripting snapshot creation and cleanup with the CLI or Lambda."
+    ],
+    "bestFor": [
+      "Scheduled, automatic EBS snapshot backups with a defined retention policy, without custom scripting.",
+      "Enforcing consistent backup and retention compliance across many tagged EBS volumes or instances."
+    ],
+    "watchOutFor": [
+      "Only manages EBS snapshots and EBS-backed AMIs — it does not back up instance store volumes, RDS, or other AWS data services."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Backup",
+        "note": "AWS Backup is a centralized backup service spanning many AWS services (EBS, RDS, DynamoDB, EFS, etc.) with a single policy console; DLM is narrowly focused on automating EBS snapshot/AMI lifecycle only."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario needs scheduled, automatic EBS snapshot creation and deletion per a retention policy, tag-based",
+        "pick": "Amazon Data Lifecycle Manager (DLM)"
+      }
+    ]
+  },
+  {
+    "id": "guardduty",
+    "name": "Amazon GuardDuty",
+    "category": "Security & Identity",
+    "oneLiner": "ML-based threat detection service that continuously monitors your AWS accounts for malicious or unauthorized activity.",
+    "specifics": [
+      "Analyzes CloudTrail management/data events, VPC Flow Logs, and DNS query logs by default; optional protection plans extend coverage to EKS audit logs, S3 data events, RDS/Aurora login activity, Lambda network activity, and EBS malware scanning.",
+      "Fully managed and agentless — no software, sensors, or infrastructure to deploy or maintain.",
+      "Findings carry a severity rating and can trigger automated response via EventBridge (e.g., Lambda remediation, Security Hub aggregation).",
+      "Detects things like compromised credentials, cryptocurrency mining, unusual API call patterns, and traffic to known-malicious IPs/domains."
+    ],
+    "bestFor": [
+      "Continuous, automated threat detection across accounts without deploying agents.",
+      "Catching compromised credentials or cryptocurrency-mining activity."
+    ],
+    "watchOutFor": [
+      "Detects threats but doesn't investigate root cause or fix anything itself — pair with Detective for deep investigation."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon Macie",
+        "note": "GuardDuty finds malicious/anomalous activity across the account; Macie only finds sensitive data inside S3."
+      },
+      {
+        "service": "Amazon Inspector",
+        "note": "GuardDuty watches for active threats/behavior in near real time; Inspector scans for known software vulnerabilities (CVEs) in resources."
+      },
+      {
+        "service": "Amazon Detective",
+        "note": "GuardDuty is the detector that raises findings; Detective is the investigator that visualizes and root-causes those findings afterward."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to detect compromised credentials, malicious activity, or crypto mining without deploying agents",
+        "pick": "Amazon GuardDuty"
+      }
+    ]
+  },
+  {
+    "id": "macie",
+    "name": "Amazon Macie",
+    "category": "Security & Identity",
+    "oneLiner": "ML-powered service that discovers, classifies, and reports on sensitive data such as PII stored in Amazon S3.",
+    "specifics": [
+      "Scans Amazon S3 only — does not inspect EBS, RDS, DynamoDB, or other storage services.",
+      "Uses managed data identifiers plus machine learning and pattern matching to detect PII, PHI, credentials, and financial data.",
+      "Also flags S3 bucket-level security risks discovered during analysis, such as public or unencrypted buckets.",
+      "Runs as one-time or scheduled classification jobs against selected buckets or the whole account."
+    ],
+    "bestFor": [
+      "Discovering and classifying PII/sensitive data at scale in S3 for compliance needs (e.g., GDPR, HIPAA)."
+    ],
+    "watchOutFor": [
+      "Limited to S3 — a scenario about sensitive data in RDS or DynamoDB is not a Macie fit."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon GuardDuty",
+        "note": "Macie looks for sensitive data content in S3; GuardDuty looks for malicious behavior/threats across the account."
+      },
+      {
+        "service": "Amazon Inspector",
+        "note": "Macie classifies data at rest; Inspector scans compute resources for software vulnerabilities."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to find or classify PII/sensitive data stored in S3",
+        "pick": "Amazon Macie"
+      }
+    ]
+  },
+  {
+    "id": "inspector",
+    "name": "Amazon Inspector",
+    "category": "Security & Identity",
+    "oneLiner": "Automated vulnerability management service that continuously scans EC2 instances, container images in ECR, and Lambda functions for known software vulnerabilities.",
+    "specifics": [
+      "Scans for CVEs and network reachability issues on EC2, container image vulnerabilities in ECR, and vulnerable code/dependencies in Lambda functions.",
+      "Continuous, event-driven scanning — automatically rescans when a new CVE is published or a monitored resource changes, not just on a fixed schedule.",
+      "Requires the SSM Agent running on EC2 instances for host-level assessment.",
+      "Assigns each finding a risk score to help prioritize remediation."
+    ],
+    "bestFor": [
+      "Continuous vulnerability/CVE scanning of EC2 instances, ECR container images, and Lambda functions."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon GuardDuty",
+        "note": "Inspector finds known vulnerabilities (CVEs) in resources; GuardDuty finds active malicious behavior/threats."
+      },
+      {
+        "service": "AWS Trusted Advisor",
+        "note": "Inspector does deep, continuous CVE-level vulnerability scanning; Trusted Advisor gives broader but shallower best-practice checks across cost, security, and fault tolerance."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to find known vulnerabilities/CVEs in EC2, containers, or Lambda",
+        "pick": "Amazon Inspector"
+      }
+    ]
+  },
+  {
+    "id": "detective",
+    "name": "Amazon Detective",
+    "category": "Security & Identity",
+    "oneLiner": "Security investigation service that automatically collects log data and builds interactive visual graphs to help find the root cause of a security finding.",
+    "specifics": [
+      "Ingests data from GuardDuty, Macie, Security Hub, VPC Flow Logs, CloudTrail, and EKS audit logs to build a behavior graph over time.",
+      "Does not generate its own findings — it's used after a finding already exists, to investigate and visualize the activity around it.",
+      "Automatically maintains up to a year of historical event data for analysis without you managing the underlying data pipeline.",
+      "Visualizes relationships between IPs, accounts, users, and roles involved in an incident to speed up root-cause analysis."
+    ],
+    "bestFor": [
+      "Root-causing and investigating an already-flagged security finding across accounts and resources."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon GuardDuty",
+        "note": "Detective is the investigation/visualization layer that runs after GuardDuty (or Macie/Security Hub) raises a finding; it does not detect threats itself."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to investigate root cause or visualize the scope of an incident after a finding was raised",
+        "pick": "Amazon Detective"
+      }
+    ]
+  },
+  {
+    "id": "firewall-manager",
+    "name": "AWS Firewall Manager",
+    "category": "Security & Identity",
+    "oneLiner": "Central security management service that lets you define and automatically enforce firewall-related protections across an entire AWS Organization.",
+    "specifics": [
+      "Requires AWS Organizations and a designated Firewall Manager administrator account.",
+      "Automatically applies policies to new accounts and to new/existing resources as they're created, giving consistent protection without manual per-account setup.",
+      "Centrally manages AWS WAF rules, AWS Shield Advanced protections, VPC Security Groups, AWS Network Firewall, and Route 53 Resolver DNS Firewall.",
+      "Reports non-compliant resources against the policy and can auto-remediate them rather than requiring resources to be tracked individually."
+    ],
+    "bestFor": [
+      "Enforcing consistent WAF/Shield/Security Group/Network Firewall policy across every account in an Organization.",
+      "Automatically protecting new accounts or resources as they're created."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS WAF",
+        "note": "Firewall Manager centrally deploys and enforces WAF rules org-wide; WAF itself just defines rules for a single resource or account."
+      },
+      {
+        "service": "AWS Organizations SCPs",
+        "note": "SCPs restrict which actions/API calls accounts can perform; Firewall Manager enforces actual firewall and network security configurations."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario says enforce security policy consistently across all accounts or auto-protect new accounts/resources",
+        "pick": "AWS Firewall Manager"
+      }
+    ]
+  },
+  {
+    "id": "artifact",
+    "name": "AWS Artifact",
+    "category": "Security & Identity",
+    "oneLiner": "Self-service portal for on-demand access to AWS's own compliance reports and agreements.",
+    "specifics": [
+      "Provides downloadable compliance reports such as SOC 1/2/3, PCI DSS, and ISO certifications (\"Artifact Reports\").",
+      "Provides agreements you can review and accept online, such as the Business Associate Addendum (BAA) for HIPAA (\"Artifact Agreements\").",
+      "Purely a document repository — it does not scan, monitor, or assess your own AWS resources or account configuration.",
+      "Free to use and available to all AWS accounts."
+    ],
+    "bestFor": [
+      "Retrieving AWS's third-party audit/compliance documentation for auditors.",
+      "Reviewing and accepting compliance agreements like the HIPAA BAA."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Config / AWS Security Hub",
+        "note": "Artifact provides AWS's own compliance reports about AWS's infrastructure; Config and Security Hub assess the compliance of your own account's resources."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to download AWS's SOC/PCI/ISO reports or accept the HIPAA BAA",
+        "pick": "AWS Artifact"
+      }
+    ]
+  },
+  {
+    "id": "cloudhsm",
+    "name": "AWS CloudHSM",
+    "category": "Security & Identity",
+    "oneLiner": "Cloud-based hardware security module service that gives you a dedicated, single-tenant device for generating and managing your own encryption keys.",
+    "specifics": [
+      "FIPS 140 Level 3 validated hardware, dedicated to a single customer — no other AWS customer shares the physical device.",
+      "You control the keys directly and AWS has no access to or visibility into them; AWS cannot recover a lost key for you.",
+      "Deployed inside your VPC as a cluster spanning multiple AZs for high availability, with you responsible for cluster administration.",
+      "Supports industry-standard cryptographic APIs (PKCS#11, JCE, CNG) for integrating custom applications."
+    ],
+    "bestFor": [
+      "Workloads that require a dedicated single-tenant HSM with full customer control over keys — AWS has now brought standard KMS HSMs up to matching FIPS 140 Level 3 validation too, so tenancy/control is the real reason to pick CloudHSM over KMS, not the FIPS level alone."
+    ],
+    "watchOutFor": [
+      "Higher operational overhead than KMS — you manage the HSM cluster and key backup yourself."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS KMS",
+        "note": "KMS is a managed service where AWS operates the underlying, largely multi-tenant HSM infrastructure and you never manage hardware directly; CloudHSM gives you a dedicated single-tenant HSM under your own direct control. KMS can even use a CloudHSM cluster as a custom key store for workloads that need that dedicated hardware."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario requires a single-tenant, dedicated HSM with full customer control over keys",
+        "pick": "AWS CloudHSM"
+      }
+    ]
+  },
+  {
+    "id": "neptune",
+    "name": "Amazon Neptune",
+    "category": "Database",
+    "oneLiner": "Fully managed graph database purpose-built for storing and querying highly connected data.",
+    "specifics": [
+      "Supports the Gremlin and openCypher property-graph query languages as well as SPARQL for RDF graphs.",
+      "Stores relationships as first-class data, making multi-hop traversals (friend-of-a-friend, connection chains) fast compared to relational JOINs."
+    ],
+    "bestFor": [
+      "Social networking applications (relationships, connections, follows).",
+      "Fraud-detection rings and recommendation engines built on relationship graphs.",
+      "Knowledge graphs."
+    ],
+    "triggers": [
+      {
+        "when": "data is highly connected and the workload needs relationship/graph traversal queries",
+        "pick": "Amazon Neptune"
+      }
+    ]
+  },
+  {
+    "id": "documentdb",
+    "name": "Amazon DocumentDB (with MongoDB compatibility)",
+    "category": "Database",
+    "oneLiner": "Fully managed document database service that is compatible with MongoDB APIs and drivers.",
+    "specifics": [
+      "Stores data as JSON-like documents, purpose-built for workloads already using MongoDB tools and drivers.",
+      "Separates compute and storage, auto-scaling storage similarly to Aurora's architecture."
+    ],
+    "bestFor": [
+      "Migrating or lifting-and-shifting existing MongoDB workloads to a managed AWS service.",
+      "New applications that need flexible, semi-structured JSON document storage."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon DynamoDB",
+        "note": "DocumentDB is the pick when a scenario explicitly names MongoDB compatibility; DynamoDB is AWS's native key-value/document store with no MongoDB API compatibility."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario mentions MongoDB and wants a managed equivalent",
+        "pick": "Amazon DocumentDB"
+      }
+    ]
+  },
+  {
+    "id": "keyspaces",
+    "name": "Amazon Keyspaces (for Apache Cassandra)",
+    "category": "Database",
+    "oneLiner": "Managed, serverless, wide-column database service that is compatible with Apache Cassandra.",
+    "specifics": [
+      "Compatible with Cassandra Query Language (CQL) and existing Cassandra drivers/tools.",
+      "Serverless: scales automatically with no servers to provision or manage, unlike self-managed Cassandra clusters."
+    ],
+    "bestFor": [
+      "Migrating existing Apache Cassandra workloads to a managed, serverless AWS service.",
+      "New wide-column workloads needing Cassandra-compatible tooling."
+    ],
+    "triggers": [
+      {
+        "when": "scenario mentions Apache Cassandra and wants a managed equivalent",
+        "pick": "Amazon Keyspaces"
+      }
+    ]
+  },
+  {
+    "id": "opensearch-service",
+    "name": "Amazon OpenSearch Service",
+    "category": "Database",
+    "oneLiner": "Managed service for full-text search and log analytics, built on the OpenSearch (Elasticsearch/Kibana) fork.",
+    "specifics": [
+      "Powers full-text search functionality (product search, autocomplete, relevance ranking) inside applications.",
+      "Provides log and clickstream analytics with built-in dashboarding and visualization (OpenSearch Dashboards, forked from Kibana)."
+    ],
+    "bestFor": [
+      "Adding search functionality to an application.",
+      "Centralized log analytics with interactive dashboards and near real-time visualization."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon Athena",
+        "note": "OpenSearch is the pick for full-text search and interactive log dashboards; Athena is serverless SQL querying of structured/semi-structured data directly in S3, not search or dashboarding."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario needs full-text search functionality or log-analytics dashboards",
+        "pick": "Amazon OpenSearch Service"
+      }
+    ]
+  },
+  {
+    "id": "timestream",
+    "name": "Amazon Timestream",
+    "category": "Database",
+    "oneLiner": "Purpose-built, serverless time-series database for storing and analyzing time-stamped data.",
+    "specifics": [
+      "Automatically tiers data: recent data kept in fast in-memory storage, older data moved to cheaper magnetic storage as it ages.",
+      "Built-in time-series analytics functions (interpolation, smoothing, aggregation over time windows)."
+    ],
+    "bestFor": [
+      "IoT sensor data ingestion and analysis.",
+      "Application and infrastructure metrics/monitoring data at scale."
+    ],
+    "triggers": [
+      {
+        "when": "workload is time-series data such as IoT sensor readings or metrics",
+        "pick": "Amazon Timestream"
+      }
+    ]
+  },
+  {
+    "id": "qldb",
+    "name": "Amazon QLDB (Quantum Ledger Database)",
+    "category": "Database",
+    "oneLiner": "Fully managed, centralized ledger database that provides an immutable, cryptographically verifiable transaction history.",
+    "specifics": [
+      "Every change is tracked in an append-only journal, giving a complete and verifiable history that cannot be altered or deleted.",
+      "Centralized, single-owner service: there is one trusted authority (unlike blockchain), so no distributed consensus is needed."
+    ],
+    "bestFor": [
+      "Immutable, verifiable audit trails and system-of-record use cases (e.g., financial transactions, supply-chain history).",
+      "Scenarios needing full transaction history with cryptographic proof of integrity."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Managed Blockchain",
+        "note": "QLDB fits when a single trusted central authority owns the ledger (no blockchain needed); Managed Blockchain fits when multiple parties with no central trusted authority need to transact."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need an immutable, cryptographically verifiable audit trail with one trusted owner",
+        "pick": "Amazon QLDB"
+      }
+    ]
+  },
+  {
+    "id": "managed-blockchain",
+    "name": "AWS Managed Blockchain",
+    "category": "Database",
+    "oneLiner": "Managed service for running Hyperledger Fabric permissioned networks you create and own, or for provisioning nodes/access to the existing public Ethereum network.",
+    "specifics": [
+      "Designed for decentralized use cases where multiple parties transact without a single central trusted authority.",
+      "Manages the blockchain network infrastructure (nodes, certificates, scaling) for Hyperledger Fabric or Ethereum."
+    ],
+    "bestFor": [
+      "Multi-party business networks (e.g., cross-company supply chain tracking) with no central trusted party.",
+      "Applications requiring decentralized consensus among multiple organizations."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon QLDB",
+        "note": "Managed Blockchain is the pick when multiple parties with no central trusted authority need to transact; if there's a single trusted owner, QLDB's centralized immutable ledger is simpler and correct."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "multiple parties with no central trusted authority need to transact on a shared ledger",
+        "pick": "AWS Managed Blockchain"
+      }
+    ]
+  },
+  {
+    "id": "amazon-mq",
+    "name": "Amazon MQ",
+    "category": "Messaging & Integration",
+    "oneLiner": "A managed message broker service running ActiveMQ or RabbitMQ engines.",
+    "specifics": [
+      "Two engine choices with different protocol support: ActiveMQ speaks JMS, AMQP, MQTT, STOMP, and its native OpenWire; RabbitMQ speaks AMQP 0-9-1 plus STOMP and MQTT — check which engine a scenario names before assuming a protocol is supported.",
+      "Runs on provisioned broker instances rather than being serverless like SQS/SNS: ActiveMQ's HA option is single-instance or active/standby, while RabbitMQ's HA option is a 3-node cluster.",
+      "Designed as a drop-in replacement for an existing broker so client applications keep using the same protocol/API they already speak."
+    ],
+    "bestFor": [
+      "Lift-and-shift migration of an existing application already built against JMS, AMQP, MQTT, or STOMP.",
+      "Cases where rewriting the app to use SQS/SNS APIs is not feasible or desired."
+    ],
+    "watchOutFor": [
+      "Not the default choice for new, cloud-native applications: SQS/SNS are cheaper, scale further, and need no broker management."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon SQS / SNS",
+        "note": "Amazon MQ is a managed broker for apps that already speak JMS/AMQP/MQTT/STOMP and need minimal rewrite; SQS/SNS are serverless, protocol-agnostic, virtually unlimited-scale queuing/pub-sub services and are the default pick for new application designs."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "an existing application already uses JMS/AMQP/MQTT/STOMP and must move to the cloud with minimal code changes",
+        "pick": "Amazon MQ"
+      },
+      {
+        "when": "a new, decoupled cloud-native architecture is being designed from scratch",
+        "pick": "Amazon SQS / SNS"
+      }
+    ]
+  },
+  {
+    "id": "amazon-ses",
+    "name": "Amazon Simple Email Service (SES)",
+    "category": "Messaging & Integration",
+    "oneLiner": "A fully managed service for sending and receiving application email at scale.",
+    "specifics": [
+      "Built for transactional email (receipts, password resets, order confirmations), notifications, and marketing campaigns.",
+      "Provides deliverability tooling: sending statistics, reputation dashboards, and bounce/complaint handling.",
+      "Supports both an SMTP interface and an API/SDK for integration into applications.",
+      "New accounts start in a sandbox that only allows sending to verified email addresses/domains until production access is granted."
+    ],
+    "bestFor": [
+      "Applications that need to send high volumes of transactional or marketing email with delivery tracking.",
+      "Bulk email use cases (newsletters, notifications) needing reputation and bounce management."
+    ],
+    "watchOutFor": [
+      "Sandbox restriction on new accounts can trip up exam scenarios about a sudden inability to email unverified recipients."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon SNS",
+        "note": "SES is purpose-built for bulk/transactional email with deliverability tooling (bounce/complaint tracking, sending reputation); SNS sends short operational alerts/notifications across multiple protocols, with email being just one delivery channel, and lacks bulk email deliverability features."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "an app needs to send high volumes of transactional or marketing email with delivery tracking",
+        "pick": "Amazon SES"
+      },
+      {
+        "when": "an app needs to push short alert notifications to multiple subscribers/protocols",
+        "pick": "Amazon SNS"
+      }
+    ]
+  },
+  {
+    "id": "aws-appsync",
+    "name": "AWS AppSync",
+    "category": "Messaging & Integration",
+    "oneLiner": "A managed service for building GraphQL APIs with real-time and offline capabilities.",
+    "specifics": [
+      "Provides real-time updates via GraphQL subscriptions over WebSockets, pushing data to clients as it changes.",
+      "Offers built-in offline data synchronization for mobile and web apps, syncing local changes once connectivity returns.",
+      "Combines data from multiple sources (DynamoDB, Lambda, RDS, HTTP APIs, Elasticsearch/OpenSearch) into a single GraphQL API.",
+      "Integrates with Cognito, IAM, OIDC, or API keys for authorization at the field level."
+    ],
+    "bestFor": [
+      "Mobile or web apps that need a GraphQL API instead of REST.",
+      "Apps requiring real-time live updates or robust offline-first data sync."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon API Gateway",
+        "note": "AppSync is specifically for GraphQL APIs with built-in real-time subscriptions and offline sync; API Gateway serves REST, HTTP, and WebSocket APIs but has no native GraphQL query engine or offline sync."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "a scenario names GraphQL, or needs live updates/offline sync for a mobile or web app",
+        "pick": "AWS AppSync"
+      },
+      {
+        "when": "a scenario needs a REST/HTTP or WebSocket API",
+        "pick": "Amazon API Gateway"
+      }
+    ]
+  },
+  {
+    "id": "amazon-appflow",
+    "name": "Amazon AppFlow",
+    "category": "Messaging & Integration",
+    "oneLiner": "A fully managed, no-code service for transferring data between SaaS applications and AWS services.",
+    "specifics": [
+      "Provides pre-built connectors to SaaS apps such as Salesforce, Slack, ServiceNow, and Zendesk, and to AWS services like S3 and Redshift.",
+      "Flows can run on a schedule, be event-triggered, or run on demand, with no custom integration code required.",
+      "Includes built-in data transformation, filtering, validation, and field mapping as part of flow configuration.",
+      "Can transfer data privately over the AWS network instead of the public internet for supported connectors."
+    ],
+    "bestFor": [
+      "Integrating third-party SaaS data sources with AWS storage/analytics services without writing custom code.",
+      "Scheduled or event-driven bulk/incremental data transfer between SaaS apps and S3/Redshift."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Glue",
+        "note": "AppFlow is no-code and purpose-built for SaaS-to-AWS (or AWS-to-SaaS) transfers via pre-built connectors; Glue is a broader, code/visual-ETL service requiring more setup (crawlers, jobs, scripts) for general-purpose data transformation across AWS and other sources."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "data needs to move from a SaaS app like Salesforce or Slack into S3/Redshift without writing custom code",
+        "pick": "Amazon AppFlow"
+      },
+      {
+        "when": "general-purpose ETL or data transformation is needed across varied data sources",
+        "pick": "AWS Glue"
+      }
+    ]
+  },
+  {
+    "id": "aws-amplify",
+    "name": "AWS Amplify",
+    "category": "Compute",
+    "oneLiner": "A full-stack framework and toolchain for quickly building, deploying, and hosting web and mobile applications.",
+    "specifics": [
+      "Bundles git-based hosting with CI/CD, authentication (via Cognito), APIs (GraphQL via AppSync or REST), and storage (S3) into one guided workflow.",
+      "Provides client libraries and UI components for popular frontend frameworks (React, Vue, iOS, Android, Flutter).",
+      "Amplify Hosting delivers static sites and server-side-rendered web apps through a global CDN with automatic builds on code push."
+    ],
+    "bestFor": [
+      "Frontend or mobile developers who want backend infrastructure (auth, API, storage, hosting) wired up quickly without assembling each service manually."
+    ],
+    "watchOutFor": [
+      "An opinionated dev-quickstart layer, not a substitute for designing custom backend architecture with individual services directly."
+    ],
+    "triggers": [
+      {
+        "when": "a developer wants to quickly build and host a full-stack web or mobile app with built-in auth, API, and storage",
+        "pick": "AWS Amplify"
+      }
+    ]
+  },
+  {
+    "id": "outposts",
+    "name": "AWS Outposts",
+    "category": "Networking",
+    "oneLiner": "AWS-owned server racks physically installed in your own datacenter, extending AWS services and APIs on-premises.",
+    "specifics": [
+      "Hardware is shipped to and installed inside the customer's own datacenter or co-location facility, then connected back to a parent AWS Region for management.",
+      "Runs a subset of AWS services (e.g., EC2, EBS, ECS, RDS) locally using the same APIs, tools, and console as the cloud.",
+      "Available as full 42U racks or smaller 1U/2U servers for less space-constrained sites."
+    ],
+    "bestFor": [
+      "Workloads with data-residency or local data-processing requirements that legally or contractually cannot leave a specific facility.",
+      "Ultra-low-latency access to on-premises systems that can't tolerate a hop to the nearest AWS Region."
+    ],
+    "watchOutFor": [
+      "Requires reliable network connectivity back to the parent Region for management, updates, and most control-plane operations."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Local Zones",
+        "note": "Outposts hardware sits inside the customer's own building; Local Zones are AWS-owned infrastructure in a nearby metro facility, not on the customer's premises."
+      },
+      {
+        "service": "AWS Wavelength",
+        "note": "Outposts targets a customer's own datacenter for data residency; Wavelength embeds compute inside a telecom's 5G network for mobile-edge latency."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario says workload must run in the customer's own datacenter, with data residency, but still use AWS APIs",
+        "pick": "AWS Outposts"
+      }
+    ]
+  },
+  {
+    "id": "local-zones",
+    "name": "AWS Local Zones",
+    "category": "Networking",
+    "oneLiner": "AWS infrastructure deployment in a major metro area that extends a Region closer to end users for single-digit-millisecond latency.",
+    "specifics": [
+      "A Local Zone is an extension of a parent Region, appearing as a new Availability Zone attribute in that Region, not the customer's own building.",
+      "Supports select services like EC2, EBS, and VPC; resources connect to the parent Region for services not available locally.",
+      "Named after and placed near specific cities (e.g., Los Angeles, Boston) to serve latency-sensitive users in that metro population."
+    ],
+    "bestFor": [
+      "Latency-sensitive applications (media rendering, gaming, real-time collaboration) serving end users concentrated in a specific metro area far from an existing Region."
+    ],
+    "watchOutFor": [
+      "Not every AWS service is available in every Local Zone; check per-zone service availability before designing around it."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Outposts",
+        "note": "Local Zones are AWS-managed facilities near a city for a broad population of users; Outposts hardware is installed inside the customer's own datacenter for a single tenant."
+      },
+      {
+        "service": "AWS Wavelength",
+        "note": "Local Zones serve general internet-connected users near a metro area; Wavelength specifically embeds inside a telecom carrier's 5G network for mobile-device traffic."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario names a specific city and needs single-digit-millisecond latency for users there",
+        "pick": "AWS Local Zones"
+      }
+    ]
+  },
+  {
+    "id": "wavelength",
+    "name": "AWS Wavelength",
+    "category": "Networking",
+    "oneLiner": "AWS compute and storage embedded inside telecom providers' 5G networks for ultra-low-latency mobile and edge applications.",
+    "specifics": [
+      "Wavelength Zones are deployed at the edge of 5G carrier networks, so traffic from mobile devices reaches application servers without leaving the telecom network.",
+      "Avoids the extra hops and latency of routing mobile traffic out to the public internet and back to a Region.",
+      "Accessed and managed through the same parent Region and APIs as standard EC2/VPC resources."
+    ],
+    "bestFor": [
+      "Mobile and IoT applications needing ultra-low latency, such as AR/VR, live video analytics, and connected-vehicle or gaming use cases over 5G."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "AWS Local Zones",
+        "note": "Wavelength lives inside a telecom carrier's 5G network specifically for mobile-device latency; Local Zones sit in an AWS-owned metro facility serving general internet users."
+      },
+      {
+        "service": "AWS Outposts",
+        "note": "Wavelength targets mobile-network edge latency; Outposts targets on-premises deployment inside the customer's own datacenter for data residency."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario mentions 5G, mobile network, or mobile devices needing ultra-low latency without leaving the carrier network",
+        "pick": "AWS Wavelength"
+      }
+    ]
+  },
+  {
+    "id": "egress-only-internet-gateway",
+    "name": "Egress-only Internet Gateway",
+    "category": "Networking",
+    "oneLiner": "A VPC component that lets IPv6 instances initiate outbound internet traffic while blocking unsolicited inbound connections, acting as the IPv6 equivalent of a NAT Gateway.",
+    "specifics": [
+      "Because every IPv6 address is already publicly routable, there is no concept of private-to-public address translation (NAT) for IPv6; the egress-only internet gateway instead controls directionality of traffic.",
+      "Stateful: allows outbound-initiated traffic and its return responses, but blocks connections initiated from the internet.",
+      "Must be referenced in the route table (destination ::/0) for the relevant subnets, similar to how a NAT Gateway is referenced for IPv4."
+    ],
+    "bestFor": [
+      "IPv6-only or dual-stack subnets that need outbound internet access (e.g., software updates) without being reachable from the internet."
+    ],
+    "watchOutFor": [
+      "Only works for IPv6 traffic; IPv4 outbound-only access still requires a NAT Gateway or NAT instance."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "NAT Gateway",
+        "note": "NAT Gateway translates private IPv4 addresses to a public one for outbound access; egress-only internet gateway does no translation since IPv6 addresses are already public, it only enforces outbound-only direction."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario needs outbound-only internet access for IPv6 instances with no inbound connections allowed",
+        "pick": "Egress-only Internet Gateway"
+      }
+    ]
+  },
+  {
+    "id": "fsx-netapp-ontap",
+    "name": "Amazon FSx for NetApp ONTAP",
+    "category": "Storage",
+    "oneLiner": "Fully managed shared storage built on NetApp's ONTAP file system, supporting multiple file and block protocols on the same data.",
+    "specifics": [
+      "Supports NFS, SMB, and iSCSI simultaneously, allowing Linux, Windows, and block-storage clients to access the same underlying data.",
+      "Provides NetApp-specific features including SnapMirror-based replication, storage efficiency (deduplication, compression, thin provisioning), and instant point-in-time snapshots/clones.",
+      "Uses a scale-out architecture with the ability to scale storage and throughput independently."
+    ],
+    "bestFor": [
+      "Migrating or extending existing on-premises NetApp/ONTAP workloads to AWS without re-architecting.",
+      "Workloads needing simultaneous multi-protocol access (NFS + SMB + iSCSI) to a shared dataset."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon FSx for OpenZFS",
+        "note": "Choose ONTAP when the scenario explicitly names NetApp/ONTAP or needs multi-protocol (NFS/SMB/iSCSI) access; choose OpenZFS for Linux-focused, ZFS-based workloads needing top-tier performance and simple snapshots/clones."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario specifically names NetApp or ONTAP, or requires multi-protocol access to the same data",
+        "pick": "Amazon FSx for NetApp ONTAP"
+      }
+    ]
+  },
+  {
+    "id": "fsx-openzfs",
+    "name": "Amazon FSx for OpenZFS",
+    "category": "Storage",
+    "oneLiner": "Fully managed file storage built on the open-source ZFS file system, optimized for Linux workloads needing high performance and instant snapshots.",
+    "specifics": [
+      "Delivers high IOPS and sub-millisecond latencies, suited to performance-sensitive Linux workloads accessed over NFS.",
+      "Supports instant, low-cost snapshots and clones inherited from ZFS, useful for dev/test copies of production data.",
+      "Common migration target for on-premises workloads already running on ZFS or general NFS file servers."
+    ],
+    "bestFor": [
+      "Linux-based, performance-intensive workloads (databases, media processing) needing sub-millisecond latency over NFS.",
+      "Migrating existing on-premises ZFS or NFS file servers to AWS with minimal changes."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon FSx for NetApp ONTAP",
+        "note": "Choose OpenZFS for Linux/NFS-only workloads prioritizing raw performance and ZFS-style snapshots/clones; choose ONTAP when the scenario needs NetApp-specific features or multi-protocol (SMB/iSCSI) access."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "scenario needs a high-performance Linux NFS file system with instant snapshots, or is migrating an on-premises ZFS environment",
+        "pick": "Amazon FSx for OpenZFS"
+      }
+    ]
+  },
+  {
+    "id": "rekognition",
+    "name": "Amazon Rekognition",
+    "category": "Machine Learning",
+    "oneLiner": "Pre-trained computer vision service that analyzes images and video for faces, objects, scenes, and inappropriate content.",
+    "specifics": [
+      "Supports face detection/comparison, object and scene detection, and content moderation on images and video."
+    ],
+    "bestFor": [
+      "Adding image and video analysis (faces, objects, moderation) without building your own ML models."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon Textract",
+        "note": "Rekognition analyzes photos/video content; Textract extracts text and structured data from documents."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to analyze images or video for faces, objects, scenes, or moderation",
+        "pick": "Amazon Rekognition"
+      }
+    ]
+  },
+  {
+    "id": "textract",
+    "name": "Amazon Textract",
+    "category": "Machine Learning",
+    "oneLiner": "Extracts text, tables, and form fields from scanned documents while understanding their structure.",
+    "specifics": [
+      "Goes beyond simple OCR by preserving relationships like key-value pairs in forms and rows/columns in tables."
+    ],
+    "bestFor": [
+      "Automating data extraction from invoices, forms, and scanned documents."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon Rekognition",
+        "note": "Textract is for documents/forms/tables; Rekognition is for photos and video analysis."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "need to extract text, tables, or form fields from scanned documents",
+        "pick": "Amazon Textract"
+      }
+    ]
+  },
+  {
+    "id": "comprehend",
+    "name": "Amazon Comprehend",
+    "category": "Machine Learning",
+    "oneLiner": "Natural language processing service that finds insights and relationships in text.",
+    "specifics": [
+      "Performs sentiment analysis, entity recognition, and key phrase extraction on unstructured text."
+    ],
+    "bestFor": [
+      "Analyzing customer feedback or reviews for sentiment, entities, or key phrases."
+    ],
+    "triggers": [
+      {
+        "when": "need sentiment analysis, entity extraction, or key phrase detection from text",
+        "pick": "Amazon Comprehend"
+      }
+    ]
+  },
+  {
+    "id": "polly",
+    "name": "Amazon Polly",
+    "category": "Machine Learning",
+    "oneLiner": "Converts written text into lifelike spoken audio.",
+    "specifics": [
+      "Text-to-speech service supporting multiple languages and natural-sounding voices."
+    ],
+    "bestFor": [
+      "Adding voice/audio output to applications, such as narration or accessibility features."
+    ],
+    "triggers": [
+      {
+        "when": "need to convert text into spoken audio",
+        "pick": "Amazon Polly"
+      }
+    ]
+  },
+  {
+    "id": "transcribe",
+    "name": "Amazon Transcribe",
+    "category": "Machine Learning",
+    "oneLiner": "Converts spoken audio into written text.",
+    "specifics": [
+      "Speech-to-text service used for call transcripts, captions, and subtitles."
+    ],
+    "bestFor": [
+      "Generating transcripts or subtitles from audio or video recordings."
+    ],
+    "triggers": [
+      {
+        "when": "need to convert spoken audio into written text",
+        "pick": "Amazon Transcribe"
+      }
+    ]
+  },
+  {
+    "id": "translate",
+    "name": "Amazon Translate",
+    "category": "Machine Learning",
+    "oneLiner": "Translates text between languages using neural machine translation.",
+    "specifics": [
+      "Provides fast, fluent translation for applications and content localization."
+    ],
+    "bestFor": [
+      "Translating text content between languages, such as localizing an app or website."
+    ],
+    "triggers": [
+      {
+        "when": "need to translate text between languages",
+        "pick": "Amazon Translate"
+      }
+    ]
+  },
+  {
+    "id": "kendra",
+    "name": "Amazon Kendra",
+    "category": "Machine Learning",
+    "oneLiner": "Intelligent enterprise search service that uses natural language processing to return direct answers from indexed internal documents, not just a list of links.",
+    "specifics": [
+      "Indexes structured and unstructured content from sources like S3, SharePoint, wikis, and manuals, then lets users ask plain-English questions and get ranked, relevant answers."
+    ],
+    "bestFor": [
+      "Enterprise/internal search over documents, FAQs, and knowledge bases where users ask natural-language questions."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon OpenSearch Service",
+        "note": "OpenSearch is general-purpose search infrastructure where you configure and tune relevance yourself; Kendra uses ML to understand natural-language questions and rank direct answers out of the box."
+      },
+      {
+        "service": "Amazon Athena",
+        "note": "Athena runs SQL queries over structured/semi-structured data in S3 — it doesn't do natural-language search over unstructured documents the way Kendra does."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "intelligent enterprise search with natural-language question answering over documents/wikis/manuals",
+        "pick": "Amazon Kendra"
+      }
+    ]
+  },
+  {
+    "id": "personalize",
+    "name": "Amazon Personalize",
+    "category": "Machine Learning",
+    "oneLiner": "Fully managed ML service that builds real-time recommendation engines from your application's user activity data, using the same technology behind Amazon.com's recommendations.",
+    "specifics": [
+      "Trains on historical and real-time user interaction data (clicks, purchases, views) to serve personalized recommendations and similar-item suggestions through a real-time API, with no ML expertise required."
+    ],
+    "bestFor": [
+      "Personalized product or content recommendations, such as 'customers who bought this also bought.'"
+    ],
+    "triggers": [
+      {
+        "when": "personalized product or content recommendation engine needed",
+        "pick": "Amazon Personalize"
+      }
+    ]
+  },
+  {
+    "id": "forecast",
+    "name": "Amazon Forecast",
+    "category": "Machine Learning",
+    "oneLiner": "Fully managed ML service that generates accurate time-series forecasts from historical data without requiring ML expertise.",
+    "specifics": [
+      "Uses AutoML to automatically select and train the best forecasting algorithm on your historical time-series data plus related variables, producing forecasts for metrics like demand or resource usage."
+    ],
+    "bestFor": [
+      "Demand forecasting, inventory planning, and resource/capacity planning based on historical trends."
+    ],
+    "watchOutFor": [
+      "Closed to new customers as of mid-2024 (existing customers only, no new features) — AWS now steers new time-series-forecasting workloads toward SageMaker Canvas."
+    ],
+    "triggers": [
+      {
+        "when": "time-series prediction / demand or resource forecasting from historical data",
+        "pick": "Amazon Forecast"
+      }
+    ]
+  },
+  {
+    "id": "lex",
+    "name": "Amazon Lex",
+    "category": "Machine Learning",
+    "oneLiner": "Fully managed service for building conversational chatbots and voice interfaces, using the same speech recognition and natural language understanding technology behind Alexa.",
+    "specifics": [
+      "Combines automatic speech recognition (ASR) and natural language understanding (NLU) so bots can recognize user intent and hold multi-turn conversations, typically wired to Lambda for the business logic behind each intent."
+    ],
+    "bestFor": [
+      "Building conversational chatbots and voice-enabled applications, such as call center bots or virtual assistants."
+    ],
+    "distinguishFrom": [
+      {
+        "service": "Amazon Polly / Amazon Transcribe",
+        "note": "Polly only converts text to speech and Transcribe only converts speech to text — neither understands conversation intent. Lex adds the NLU/dialogue layer that actually recognizes intents and drives a conversation."
+      }
+    ],
+    "triggers": [
+      {
+        "when": "building a conversational chatbot or voice bot with natural-language understanding",
+        "pick": "Amazon Lex"
+      }
+    ]
+  },
+  {
+    "id": "sagemaker",
+    "name": "Amazon SageMaker",
+    "category": "Machine Learning",
+    "oneLiner": "Fully managed platform for data scientists and ML engineers to build, train, and deploy custom machine learning models at scale.",
+    "specifics": [
+      "SageMaker Studio provides a web-based IDE with managed Jupyter notebooks for building and experimenting with models.",
+      "Includes built-in algorithms and support for popular frameworks (TensorFlow, PyTorch, etc.), plus managed distributed training infrastructure that provisions and tears down compute automatically.",
+      "One-click deployment to fully managed, auto-scaling hosted endpoints for real-time or batch inference.",
+      "Additional tooling includes Ground Truth for data labeling and Pipelines for automating/orchestrating end-to-end ML workflows (MLOps)."
+    ],
+    "bestFor": [
+      "Scenarios that require a custom-trained ML model rather than a pre-built AI service.",
+      "Data science/ML teams needing an end-to-end environment to build, train, tune, and deploy models."
+    ],
+    "watchOutFor": [
+      "If the scenario just needs a pre-built capability (search, recommendations, forecasting, chatbots, translation, etc.), one of the specialized AI services is the better answer than building it yourself in SageMaker."
+    ],
+    "triggers": [
+      {
+        "when": "need to build, train, or deploy a custom ML model; scenario mentions data scientists or training your own model",
+        "pick": "Amazon SageMaker"
       }
     ]
   }
