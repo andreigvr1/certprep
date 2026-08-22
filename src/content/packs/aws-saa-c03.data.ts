@@ -12320,5 +12320,413 @@ export const questions: Question[] = [
       "d2-ha-ft",
       "Percipio"
     ]
+  },
+  {
+    "id": "tq-001",
+    "domainId": "d3",
+    "topicId": "d3-migration",
+    "type": "single",
+    "stem": "As a solutions architect, you are tasked with moving 15 terabytes of data from an on-premises system directly to the Amazon S3 infrastructure. All the data is secure within the on-premises system and ready to be imported using Amazon Snowball Edge. What is a key prerequisite before migrating the data?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Create an AWS account within a non-administrator role for security limitations."
+      },
+      {
+        "id": "B",
+        "text": "Provide only the folder source and all data will be ingested."
+      },
+      {
+        "id": "C",
+        "text": "Make sure the file names meet the object key naming guidelines."
+      },
+      {
+        "id": "D",
+        "text": "Make sure that file name formats include a colon after the name and before the extension."
+      }
+    ],
+    "correct": [
+      "C"
+    ],
+    "explanation": "The key prerequisite before migrating the data is to make sure that all data files are named based on the object key naming guideline. Any file that does not match this naming convention will not be loaded into the Amazon Simple Storage Service (S3) infrastructure. This is called object metadata. When an S3 object is created, you use a key name which allows a singular or unique way of identifying an object within an S3 bucket. There are also two different types of metadata: system-defined and user-defined. System-defined metadata is generated and managed from within the Amazon S3 infrastructure. User-defined metadata is created by individual users. You cannot use a non-administrator role to migrate the data. AWS Snowball Edge requires an AWS account with an AWS Identity and Access Management (IAM) administrator level permission. You must plan exactly which data, files, and folders you are going to ingest before they are imported into the Amazon S3 infrastructure. Data will not be ingested if you simply provide a folder source. Using file name formats that include a colon after the name and before the extension will cause the import to fail. Any file that is formatted with a colon (:) in the name of any file will fail.",
+    "difficulty": 2,
+    "tags": [
+      "d3-migration",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-002",
+    "domainId": "d3",
+    "topicId": "d3-migration",
+    "type": "single",
+    "stem": "You work for a mineral research organization as a cloud data specialist. Your company has an on-premises system for its research workflows. It needs to transfer data into AWS systems for processing and then receive the processed data back into the on-premises systems. Which of the following options should you utilize for performing this hybrid-cloud workflow securely?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Create a new VPC with an AWS Batch computing environment."
+      },
+      {
+        "id": "B",
+        "text": "Configure S3 buckets to be Requester Pays buckets."
+      },
+      {
+        "id": "C",
+        "text": "Move data across systems using AWS DataSync."
+      },
+      {
+        "id": "D",
+        "text": "Utilize consolidated billing for data use with AWS Organizations."
+      }
+    ],
+    "correct": [
+      "C"
+    ],
+    "explanation": "You would use AWS DataSync for this scenario. DataSync provides online data transfer services with acceleration and automation of data movement between various services and systems for storage. It copies data across Amazon Elastic File System (EFS) file systems, Amazon Simple Storage Service (S3) buckets, Amazon FSx systems, Hadoop Distributed File System (HDFS), Server Message Block (SMB) servers, and Network File System (NFS) file servers. You would not use consolidated billing for data use with AWS Organizations. This is a feature of AWS Organizations that allows you to pay for all AWS accounts in an organization through a single bill. This allows you to review detailed information on charges incurred by each account individually. A key advantage of consolidated billing is the ability to leverage bulk discount pricing, Reserved Instances, and Savings Plans across several member accounts in your organization. You would not configure S3 buckets to be Requester Pays buckets in this scenario. When an S3 bucket is configured with the Requester Pays option, the requester pays for the request and the data downloaded from the S3 bucket. The bucket owner still needs to pay for the bucket storage costs. This option can be used in situations where a bucket owner does not want to incur charges associated with data being accessed on a bucket. Some use cases for the Requester Pays option include web crawling data, geospatial data, and zip codes. You would not create a new virtual private cloud (VPC) with an AWS Batch computing environment in it. This scenario does not need batch processing to be performed but a way to transfer data in and out of the AWS cloud for processing. AWS Batch is a service that enables you to execute batch computing workloads on the AWS cloud. It is a fully managed service that allows for the running of batch computing workloads of near limitless sizes. It performs resource provisioning and workload distribution optimization automatically based on the workloads. You would use DataSync for data migration where encryption and integrity validation are performed while active datasets are moved swiftly across a network and into various cloud storage systems. DataSync also helps with archiving cold data stored on-premises, which can be moved to storage classes such as S3 Glacier Deep Archive or S3 Glacier Flexible Retrieval.",
+    "difficulty": 2,
+    "tags": [
+      "d3-migration",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-003",
+    "domainId": "d4",
+    "topicId": "d4-db-cost",
+    "type": "single",
+    "stem": "As a solutions architect, you are tasked with creating three SQL Server RDS instances, two MySQL RDS instances, and one PostgreSQL RDS instance. Your on-premises application has been connected to running processes within your production MySQL RDS instances for five hours. It has also been connected to running processes in your PostgreSQL RDS instance for three hours and 30 minutes. You have at least one on-premises application connected to each RDS instance type. Your connections are concurrent, and all RDS instances are in a production state. Which billing option specifies how you would be billed?",
+    "options": [
+      {
+        "id": "A",
+        "text": "DB instance hours"
+      },
+      {
+        "id": "B",
+        "text": "DB instance connections"
+      },
+      {
+        "id": "C",
+        "text": "DB size"
+      },
+      {
+        "id": "D",
+        "text": "DB instance based on each minute a process is connected"
+      }
+    ],
+    "correct": [
+      "A"
+    ],
+    "explanation": "You would be billed by database (DB) instance hours. When you create an Amazon Relational Database Service (RDS) environment, you are billed by the running time, which includes instance class, backup storage, database storage allocated, and data transfers into and out of your Amazon Elastic Compute Cloud (EC2) instance. When you are billed specifically for a running instance, it is classified by the instance hour, which simply means an instance that has been running for one hour. However, if you have an instance that ran for 10 minutes, you will still be charged for one full instance hour. In the scenario, you would be billed for 9 hours. The breakdown is as follows: MySQL RDS Instance = 5 hours, PostgreSQL Instance = 3 hours and 30 minutes. Total DB Instance Hours = 8 hours and 30 minutes, which means 9 total hours because all accumulated minutes round up to the next hour. You can be billed for your RDS based on the following components: DB instance hours (per hour) — partial DB instance hours consumed are billed as full hours; Storage (per GiB per month) — storage capacity that you have provisioned to your DB instance; I/O requests (per 1 million requests per month) — total number of storage I/O requests that you have made in a billing cycle, for Amazon RDS magnetic storage only; Provisioned IOPS (per IOPS per month) — provisioned IOPS rate, regardless of IOPS consumed, for Amazon RDS Provisioned IOPS (SSD); Backup storage (per GiB per month) — backup storage is the storage that is associated with automated database backups and any active database snapshots that you have taken; Data transfer (per GB) — data transfer in and out of your DB instance from or to the internet and other AWS Regions. You would not be billed by DB instance based on each minute a process is connected. RDS instances bill on an hourly basis and all minutes are rounded up to the next hour. You would not be billed by DB instance connections because RDS instances have no limitations of database connections. You are only limited based on your AWS instance resources such as CPU and memory. DB instance connections are not a billable component. You would not be billed by DB size because the size of the DB instance depends on the allocated size of the provisioned storage and not the actual size of the RDS database.",
+    "difficulty": 2,
+    "tags": [
+      "d4-db-cost",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-004",
+    "domainId": "d3",
+    "topicId": "d3-data-analytics",
+    "type": "single",
+    "stem": "You are working with large datasets as part of a machine-learning platform for traffic control systems. You need to prepare data for machine learning through categorization, cleaning, and enrichment before it is stored on Amazon S3 buckets. What should you do for this?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Activate Intelligent-Tiering for the S3 buckets."
+      },
+      {
+        "id": "B",
+        "text": "Use instance store volumes to store pre-processed data."
+      },
+      {
+        "id": "C",
+        "text": "Perform ETL services using AWS Glue."
+      },
+      {
+        "id": "D",
+        "text": "Perform data-at-rest encryption of the S3 buckets."
+      }
+    ],
+    "correct": [
+      "C"
+    ],
+    "explanation": "You would use AWS Glue, which is an Extract Transform Load (ETL) service for categorization, cleaning, and enrichment of data before storing it as processed data in Amazon Simple Storage Service (S3) buckets. Data that is ingested into Amazon S3 first needs to be prepared for machine learning (ML) by performing transformation and cleaning up activities. These activities include standardizing attributes, managing incomplete data, and running deduplication. Data structures may also need to be changed into an Online Analytical Processing (OLAP) model that makes data querying easier. You would not perform data-at-rest encryption of the S3 buckets in this scenario. Amazon S3 is a service that allows you to store an unlimited number of objects in S3 buckets, with each object being up to 5 TB in size. The files stored on Amazon S3 can be of any type, including images, videos, and documents. You would not activate Intelligent-Tiering for the S3 buckets in this scenario. S3 Intelligent-Tiering is an S3 storage class for data with a changing or unknown frequency of access. It requires a monthly fee for monitoring and automation for each object. S3 automatically moves objects not accessed for 30 days into the S3 Standard-Infrequent Access (IA) tier. If an object is accessed in the S3 Standard-IA tier, S3 moves it into S3 Standard. You would not use instance store volumes to store pre-processed data in this scenario. Instance store volumes provide temporary physical storage with an Amazon Elastic Compute Cloud (EC2) instance's current host. This can be used for temporary data. Some concepts related to big data storage and ML you should know include: Data transformation — large volumes of data require data transformation. Amazon Redshift Spectrum, AWS Glue, and Amazon Athena can be used for performing data pre-processing on data in or targeted to Amazon S3 buckets. Storage — raw data in an Amazon S3 bucket undergoes data preparation via an Extract Transform Load (ETL) process and then is saved in an Amazon S3 bucket for analytics data. This ETL process can be done using Amazon EMR with Apache Spark. Endpoints — Amazon S3 can be used as an endpoint for storing training datasets that are acquired from sources such as Internet of Things (IoT) streams, data lakes, and database warehouses. Tabular data — if you have tabular data to process, you can use Athena to manipulate data files in S3 buckets with SQL. Non-SQL data — if you have non-SQL compatible data to process, you can use AWS Glue for running Spark jobs on data stored in S3 buckets. These Spark jobs are compatible with both Python and Scala.",
+    "difficulty": 2,
+    "tags": [
+      "d3-data-analytics",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-005",
+    "domainId": "d3",
+    "topicId": "d3-networking-perf",
+    "type": "single",
+    "stem": "You work for a web services organization as an AWS cloud solutions architect. You have been asked to implement a system that can help increase the speed of delivering static website content to the company's user base around the world. How would you improve communication with your users that are located far from your existing AWS regions?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Use AWS Outposts to create regions inside data centers."
+      },
+      {
+        "id": "B",
+        "text": "Track all API calls using CloudTrail."
+      },
+      {
+        "id": "C",
+        "text": "Monitor the AWS system in real time using CloudWatch."
+      },
+      {
+        "id": "D",
+        "text": "Use S3 buckets with CloudFront."
+      }
+    ],
+    "correct": [
+      "D"
+    ],
+    "explanation": "You would use Amazon Simple Storage Service (S3) buckets with CloudFront for this scenario. CloudFront is a content delivery network (CDN) that caches copies of data at locations around the world near customers. Caching copies of data locally near customers helps send data, applications, and videos to your customers with low latency and high speeds. To do this, CloudFront uses edge locations, which are sites around the globe that speed up the delivery of content to users. Edge locations run a combination of CloudFront and Route 53 for ensuring customers access the correct web addresses with low latency. CloudFront gets its files from an origin location that can be an Amazon S3 bucket or a web server. You would not use AWS Outposts to create regions inside data centers. AWS Outposts allows a company to use AWS services inside their own data center or company building. Outposts creates a miniature region inside a data center, providing all AWS services in an isolated private location. This is an example of a hybrid cloud approach. You would not monitor the AWS system in real time using CloudWatch. AWS CloudWatch allows you to monitor the AWS system in real time by monitoring and tracking resource metrics. A metric could be the CPU utilization for an Amazon Elastic Compute Cloud (EC2) instance. You can also create a threshold for a metric and trigger an alert and/or an action when the metric reaches the defined threshold. You would not track all application programming interface (API) calls using CloudTrail. CloudTrail keeps track of all API calls made in an AWS account and records the API caller's identity and source IP address, the time of the call, and other key information. CloudTrail updates events in it 15 minutes after an API call has been made. API calls are used in AWS for provisioning and managing resources. You can filter API calls in CloudTrail based on the date and time of the call, the user making the call, and the resources accessed by the call. Another AWS service you need to be aware of for the exam is AWS Global Accelerator. This service greatly improves the performance and availability of global applications by utilizing the AWS global network infrastructure. Global Accelerator can improve user traffic performance by up to 60% by optimizing the path to a company's application. This keeps latency, packet loss, and jitter low by providing customers with two static public IP addresses that act as entry points to the application. Global Accelerator automatically routes traffic to the nearest endpoint that is healthy, ensuring that endpoint failure is mitigated. This way you can modify application endpoints, including load balancers, EC2 instances, and elastic IP, in the backend, without the need to make any changes that face your end users.",
+    "difficulty": 2,
+    "tags": [
+      "d3-networking-perf",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-006",
+    "domainId": "d2",
+    "topicId": "d2-ha-ft",
+    "type": "single",
+    "stem": "You are an AWS Solutions Architect and you have just executed an Auto Scaling group in a new region. The group has the following characteristics: Minimum Size = 20, Desired Capacity Value = 40, Maximum Size = 200. After the execution, you notice you had 20 errors related to the failed creation attempt of your EC2 instances. Which of the following is the MOST likely reason for the failure?",
+    "options": [
+      {
+        "id": "A",
+        "text": "You failed to increase the default EC2 capacity from 20 to 40."
+      },
+      {
+        "id": "B",
+        "text": "The desired capacity value cannot exceed the minimum size of 20."
+      },
+      {
+        "id": "C",
+        "text": "You cannot create an Auto Scaling group larger than 20 EC2 instances."
+      },
+      {
+        "id": "D",
+        "text": "You failed to attach the Elastic load balancer to the Auto Scaling group."
+      }
+    ],
+    "correct": [
+      "A"
+    ],
+    "explanation": "The default value for creating Amazon Elastic Compute Cloud (EC2) instances is limited to all regions with a value of 20. After this value, all other EC2 instance creations will fail. However, this option can be modified to a maximum of 40, depending on the business requirements. The errors occurred because the default capacity for EC2 instances had not been increased to 40, which is what is needed in the scenario. You use EC2 Auto Scaling to achieve elasticity on AWS. It allows you to add or remove EC2 instances automatically to match changing demand. This helps ensure application availability. Scaling can be either dynamic, which scales as per changing demands, or predictive, which performs scaling based on predicted demands. Both of these scaling methods can be used together for speedier scaling. Scaling up is to increase the power of the existing machines, and scaling out is to increase the number of machines. You implement auto scaling using an Auto Scaling group with your application. Failing to attach AWS Elastic Load Balancing (ELB) to the Auto Scaling group is not relevant. ELB is used for distributing traffic among EC2 instances. It ensures that no EC2 instance is left unused and, similarly, no instance is used more than required by sharing traffic evenly across several EC2 instances. ELB is a managed service that operates at a regional level, ensuring automatic high availability. It is automatically scalable as it caters to newly added EC2 instances by receiving communication from the Auto Scaling service. Also, when the EC2 fleet scales in, it halts new traffic to instances being removed until they drain out their current requests. ELB also ensures decoupling of frontend and backend instances by allowing the backend instances to be added or removed without the need for any changes to the frontend instances. You can create an Auto Scaling group with more than 20 EC2 instances because you can manually change the size to a minimum value and a maximum value within the configuration of your Auto Scaling file. The desired capacity value can exceed the minimum size of 20. When you configure an Auto Scaling group, you need to specify the minimum, desired, and maximum capacity of instances in the group. The minimum number is the instances the group starts out with. The maximum number is the limit of how many new instances will be added to \"scale out\" to growing demands.",
+    "difficulty": 2,
+    "tags": [
+      "d2-ha-ft",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-007",
+    "domainId": "d3",
+    "topicId": "d3-migration",
+    "type": "single",
+    "stem": "You are an Amazon Web Solutions Architect. You need a data migration solution that has the following characteristics: Encryption for data at rest and in transit; Provision of a network adaptor that can transfer up to 100 GB/second; Capability of transferring data from on-premises system to Amazon S3 and local environments; Availability of Amazon EC2 and S3 compatibility endpoints. Your boss asks you which storage option would allow the company to transfer petabytes of data between the current Amazon S3 storage solution and storage that resides in the company-owned data center. Which option should you recommend?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Amazon S3 Intelligent-Tiering"
+      },
+      {
+        "id": "B",
+        "text": "AWS Snowball Edge"
+      },
+      {
+        "id": "C",
+        "text": "Amazon S3 Glacier Deep Archive"
+      },
+      {
+        "id": "D",
+        "text": "Amazon DynamoDB"
+      }
+    ],
+    "correct": [
+      "B"
+    ],
+    "explanation": "AWS Snowball Edge is a service that enhances data transfer rates exponentially by using physical storage appliances to transfer petabytes of data. The edge device has a network adaptor that can transfer data up to 100 GB per second. The device is sent to the data center, bypassing the Internet. It is then moved to the storage appliance and finally sent back to Amazon using customized shipping containers. The device also encrypts data at rest and in transit. Amazon Simple Storage Service (S3) is not a data migration service as required in this scenario. Amazon S3 Standard provides object-level storage, but it is intended for data that is accessed more frequently. This storage option would not be used for migrating large amounts of data from an on-premises data center. The Amazon S3 Intelligent-Tiering storage class provides managed-cost access to frequently changing data or data with unknown access patterns. Amazon S3 Glacier is not used for data migration. It is an AWS storage solution used for data that is considered infrequently used or that is considered cold. S3 Glacier Deep Archive is the lowest-cost storage solution in the S3 family, and is intended for long-term archive and digital preservation with retrieval turnaround measured in hours. Amazon DynamoDB is not a data migration service as required in this scenario. DynamoDB is a non-relational serverless database that is purpose built and fully managed. It has a millisecond response time, is highly scalable, and can handle millions of requests a second.",
+    "difficulty": 2,
+    "tags": [
+      "d3-migration",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-008",
+    "domainId": "d1",
+    "topicId": "d1-secure-access",
+    "type": "single",
+    "stem": "You are evaluating the security of the AWS deployment for your organization. To ensure application configuration and credentials security, you need to save sensitive and confidential information securely in a file. Which action should you perform?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Delete the $HOME/.aws folder."
+      },
+      {
+        "id": "B",
+        "text": "Run the aws configure command."
+      },
+      {
+        "id": "C",
+        "text": "Upload the credentials file from .aws to a public S3 bucket."
+      },
+      {
+        "id": "D",
+        "text": "Decrypt the config file."
+      }
+    ],
+    "correct": [
+      "B"
+    ],
+    "explanation": "You should run the aws configure command. This helps you specify all sensitive and confidential information, which is saved in the credentials file in the .aws folder in the user's home directory. Less sensitive data can also be specified using aws configure and stored in a file named config in the same location. $HOME/.aws/credentials stores long-term credentials, including the access key ID and secret access key. $HOME/.aws/cli/cache and $HOME/.aws/sso/cache store short-term credentials for Identity and Access Management (IAM) roles and IAM Identity Center services. You would not delete the $HOME/.aws folder because it contains key credentials and configuration data. You should not upload the credentials file from .aws to a public Amazon Simple Storage Service (S3) bucket as this will compromise the security of your system. This file needs to have restricted access only. You would not decrypt the config file as this file is in plain text and not encrypted by default. Sensitive data is not stored in this file but in the credentials file. Credentials used by AWS CLI are not encrypted and are stored as plain text. To ensure the security of these credentials files, you should restrict access to the $HOME/.aws folder to authorized users only. A best practice is to use roles that have temporary credentials, which reduces the amount of possible damage that can happen if the credentials are compromised. AWS security credentials are used to authenticate and authorize user requests by verifying the identity of a user and providing permissions for access to AWS resources. Credentials on AWS can be of several types that include usernames and passwords for using the AWS Management Console and access keys for using AWS CLI and AWS Tools for PowerShell. Security best practices dictates that the email address associated with your AWS account, AWS account ID, root password, and access keys need to be stored securely. Configuration settings and credentials can be saved in files maintained using AWS CLI. These files are split among various profiles, and by default AWS CLI uses settings in the profile titled default. Specific settings can be overridden using environment variables or command-line parameters.",
+    "difficulty": 2,
+    "tags": [
+      "d1-secure-access",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-009",
+    "domainId": "d1",
+    "topicId": "d1-iam",
+    "type": "single",
+    "stem": "Which security option gives you the ability to manage permissions for several different users at one time for the purpose of controlling access to specific AWS resources?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Multi-factor authentication (MFA)"
+      },
+      {
+        "id": "B",
+        "text": "Amazon's shared responsibility model"
+      },
+      {
+        "id": "C",
+        "text": "IAM policies"
+      },
+      {
+        "id": "D",
+        "text": "IAM group"
+      }
+    ],
+    "correct": [
+      "D"
+    ],
+    "explanation": "An Identity and Access Management (IAM) group is a group of users associated with a single AWS account. An AWS best practice is to create an AWS group for specific access to certain AWS resources. Then, using group membership, you would create user access and permissions and assign policies and any additional permissions at the group level. IAM groups should be created based on users' functional responsibility using least privilege. Amazon's shared responsibility model is used to differentiate between Amazon's areas of responsibility versus the customer's. This governs the division of responsibilities, not the management of user permissions. IAM policies are a way of defining permissions for a user or resource by attaching this component, which is then evaluated as allowed or denied. IAM policies describe specific permissions, whereas an IAM group manages permissions for multiple users at one time. Multi-factor authentication (MFA) is a security option for validating a user's identity on a network based on substantiating two or more pieces of information. It is not a solution for managing user permissions.",
+    "difficulty": 2,
+    "tags": [
+      "d1-iam",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-010",
+    "domainId": "d4",
+    "topicId": "d4-network-cost",
+    "type": "single",
+    "stem": "You work as a cloud network specialist for a global telecom company. The head of operations for the company wants to find a way to implement an efficient and cost-optimized network topology for the company's AWS cloud. Each department of the company has its own VPC. You need to combine the individual private networks of each department in the AWS deployment into one large network. How should you do this?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Register new domain names using Route 53."
+      },
+      {
+        "id": "B",
+        "text": "Use ELB to split traffic among multiple instances."
+      },
+      {
+        "id": "C",
+        "text": "Integrate the multiple VPCs using AWS Transit Gateway."
+      },
+      {
+        "id": "D",
+        "text": "Monitor key metrics related to the VPCs using CloudWatch."
+      }
+    ],
+    "correct": [
+      "C"
+    ],
+    "explanation": "You would integrate the multiple virtual private clouds (VPCs) using AWS Transit Gateway. You can use AWS Transit Gateway or Software Site-To-Site Virtual Private Network (VPN) for integrating multiple VPCs into a larger network. The best way to achieve connectivity between VPCs is to ensure that you use IP address ranges that do not overlap. For this, you need to use a unique classless inter-domain routing (CIDR) range for each VPC. You can use the following design options when creating VPC-to-VPC connectivity: VPC peering — network connectivity between two VPCs; AWS Transit Gateway — regional router connections between VPCs; Software Site-to-Site VPN — VPN connections between VPCs using software appliances; Software VPN-to-AWS-managed VPN — connectivity between VPCs through software appliance-to-VPN connections; AWS-managed VPN — customer-managed VPC-to-VPC routing using IPSec VPN connections; AWS PrivateLink — AWS uses interface endpoints to provide network connectivity between two VPCs. You would not need to register new domain names using Route 53 in this scenario. Domain Name System (DNS) is a system that maps domain names (www.example.com) to IP addresses (192.268.4.6). Amazon Route 53 provides DNS services, including transferring DNS records for any existing domain names from other registrars and registering new domain names. It also connects users to infrastructures inside or outside AWS. You would not need to use Elastic Load Balancing (ELB) to split traffic among multiple instances in this scenario. ELB is the process of splitting incoming traffic among several instances. It ensures that no Amazon Elastic Compute Cloud (EC2) instance is left unused and similarly no instance is used more than required by sharing traffic evenly across several EC2 instances. ELB is a managed service that operates at a regional level ensuring automatic high availability. You would not monitor key metrics related to the VPCs using CloudWatch in this scenario. AWS CloudWatch allows you to monitor the AWS system in real time by monitoring and tracking various resource metrics. A metric could be the CPU utilization for an EC2 instance. You can also create a threshold for a metric and trigger an alert and an action when the metric reaches the threshold. The CloudWatch dashboard displays key system metrics graphically in real time, offering an updated view of the AWS system. This helps you get a clear analysis of how your system's infrastructure, applications, and services are doing. For the exam, you need to know about VPC peering. AWS creates a VPC peering connection by using the existing VPC infrastructure. VPC peering allows you to connect VPCs that may be in separate accounts or across multiple AWS regions. The advantage of VPC peering is that it has no single point of failure or anything that can create a bottleneck in network throughput.",
+    "difficulty": 2,
+    "tags": [
+      "d4-network-cost",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-011",
+    "domainId": "d3",
+    "topicId": "d3-data-analytics",
+    "type": "single",
+    "stem": "A solar power company using AWS for its operations has consulted with you for creating an application for monitoring its deployed panels and receiving real-time data. This data is used for scheduling servicing needs to be analyzed using business intelligence tools and dashboards. What should you do for this requirement?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Create an S3 origin server for CloudFront."
+      },
+      {
+        "id": "B",
+        "text": "Move data from on-premises systems to the AWS cloud using Snowball Edge."
+      },
+      {
+        "id": "C",
+        "text": "Utilize DMS for migrating the databases, keeping source databases running."
+      },
+      {
+        "id": "D",
+        "text": "Load data into Amazon S3 and Redshift using Kinesis Data Firehose."
+      }
+    ],
+    "correct": [
+      "D"
+    ],
+    "explanation": "You would load the streaming data into Amazon Simple Storage Service (S3) and Redshift using Kinesis Data Firehose. Kinesis Data Firehose helps create incremental views after batching and compressing ingested real-time data. You can also use AWS Lambda with Firehose for performing transformation of the data before storing an incremental view in S3. Stream processing involves sourcing, manipulation, and loading of data by the ingestion layer as it is recognized. There is no grouping performed as with batch processing. It needs constant monitoring of data sources, making it more expensive compared to batch processing. You use stream processing for creating real-time analytics for dashboards or real-time predictions through a SageMaker endpoint for a website. You would not create an S3 origin server for CloudFront. Amazon CloudFront is a content delivery network (CDN) that caches copies of data at locations around the world near customers. Caching copies of data locally near customers helps send data, applications, and videos to your customers with low latency and high speeds. To do this, CloudFront uses edge locations, which are sites around the globe that speed up the delivery of content to users. You would not move data from on-premises systems to the AWS cloud using Snowball Edge in this scenario. Snowball Edge is a data migration system ideal for large scale migration of data, workflows that need data transfer, and high-capacity local computing. AWS offers various devices as part of its Snow Family for migrating data into and out of AWS. The Snow Family moves data in a secure manner and with good throughput. You would not utilize AWS Database Migration Service (DMS) for migrating databases, keeping the source databases running. DMS moves existing databases to the cloud with no disruptions to the original database. During migration, DMS keeps the source database operational, thereby reducing downtime for applications. It can be used for database consolidation, replication, or testing. For the exam, you need to know more about Amazon Kinesis. Amazon Kinesis allows for the ingestion, buffering, and processing of streaming data performed in real time. It lets you derive insights into the data within seconds. It allows you to create customized streaming data applications and easy ways to load and analyze streaming data. Kinesis Video Streams can be used for analyzing streaming audio and video data, such as footage from home security cameras, which can then be used by machine learning (ML) models in SageMaker for detecting objects. Kinesis Data Streams has two key libraries you can use for stream processing: Kinesis Producer Library (KPL) — this lets you write to a Kinesis data stream by bridging producer application code and Kinesis Data Streams application programming interface (API) data. Kinesis Client Library (KCL) — this lets you create a customized application for pre-processing streaming data. The processed data can then be emitted for incremental views and analysis. Kinesis Data Analytics allows you to use SQL for processing and transforming data streamed using Kinesis Data Streams and Kinesis Data Firehose. You can get insights in near real time from the stream before it is stored in S3. A related service you should know about is Amazon Managed Streaming for Apache Kafka (Amazon MSK), which allows you to create applications that use Apache Kafka for processing streaming data. It is a fully managed service. Amazon MSK lets you use native Apache Kafka application programming interfaces (APIs) for populating data lakes, streaming changes in and out of databases, and performing ML and analytics work.",
+    "difficulty": 2,
+    "tags": [
+      "d3-data-analytics",
+      "Test.docx-OCR"
+    ]
+  },
+  {
+    "id": "tq-012",
+    "domainId": "d1",
+    "topicId": "d1-secure-access",
+    "type": "single",
+    "stem": "Which of the following options does Amazon recommend for securing operating systems and applications related to AMIs?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Verify least-privilege checks using the IAM user access advisor on all AMIs."
+      },
+      {
+        "id": "B",
+        "text": "Copy the authorized_keys file to a safe location when someone leaves the company or moves to a different department."
+      },
+      {
+        "id": "C",
+        "text": "Avoid using bastion hosts due to the lack of secure access to instances."
+      },
+      {
+        "id": "D",
+        "text": "Enable secret keys and root access keys within each pre-configured AMI build."
+      }
+    ],
+    "correct": [
+      "A"
+    ],
+    "explanation": "Amazon has several recommendations for validating pre-configured Amazon Machine Images (AMIs) so that they meet a comprehensive list of standards developed by the International Organization for Standardization (ISO) and by the Center for Internet Security (CIS). One of the recommendations is to validate least-privilege checks using the AWS Identity and Access Management (IAM) user access advisor on all AMIs. Additionally, they recommend that you rotate credentials and restrict access to Amazon Elastic Compute Cloud (EC2) instances by using security groups that limit IP address ranges. You would not enable secret keys and root access keys within each pre-configured AMI build. For security reasons, Amazon recommends that you disable, not enable, secret keys and root access keys for all AMI builds. You would not copy the authorized_keys file to a safe location when someone leaves the company or moves to a different department. To ensure security, Amazon recommends deleting, not making a copy of, the keys that reside within the authorized_keys file for employees who leave the company or move to another department. When an instance is launched, you need to specify a key pair for it. The public key that you specify is put inside the Linux instance within the ~/.ssh/authorized_keys file. Whenever you need to connect to a Linux instance using secure shell (SSH) you need to provide a private key that is associated with the public key. You would not avoid using bastion hosts due to the lack of secure access to instances. Using bastion hosts ensures that a user's data is kept safe by the system on the Internet. Linux bastion hosts on an AWS infrastructure ensure secure accessibility for Linux instances that reside both in public and private subnets of an Amazon Virtual Private Cloud (VPC). Amazon recommends using bastion hosts to control authorizations and limit overall access.",
+    "difficulty": 2,
+    "tags": [
+      "d1-secure-access",
+      "Test.docx-OCR"
+    ]
   }
 ];
